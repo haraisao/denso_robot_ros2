@@ -98,6 +98,12 @@ public:
 
   bool isSlaveSyncMode() const;
 
+  double adjust_velocity(double v, double limit){
+    if (v < -limit) { return -limit; }
+    else if (v > limit) { return limit; }
+    else { return v; }
+  }
+  double adjust_target(double pos, double prev_pos,  double dt, double limit);
 
 private:
 
@@ -119,6 +125,11 @@ private:
   int send_format_;
   int recv_format_;
   bool verbose_;
+  rclcpp::Time start_time_, prev_time_;
+  double limit_[JOINT_MAX];
+  double cycle_sec_;
+
+
 
   HRESULT ChangeModeWithClearError(int mode);
 

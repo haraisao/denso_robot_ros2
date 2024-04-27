@@ -113,6 +113,11 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'ip_address', default_value='192.168.0.1',
             description='IP address by which the robot can be reached.'))
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'conn_type',
+            default_value='tcp',
+            description='Connection type used [udp/tcp].'))
 # Configuration arguments
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -163,6 +168,7 @@ def generate_launch_description():
 # Initialize Arguments
     denso_robot_model = LaunchConfiguration('model')
     ip_address = LaunchConfiguration('ip_address')
+    conn_type = LaunchConfiguration('conn_type')
     send_format = LaunchConfiguration('send_format')
     recv_format = LaunchConfiguration('recv_format')
     bcap_slave_control_cycle_msec = LaunchConfiguration('bcap_slave_control_cycle_msec')
@@ -190,6 +196,7 @@ def generate_launch_description():
                 [FindPackageShare(description_package), 'urdf', description_file]),
             ' ',
             'ip_address:=', ip_address, ' ',
+            'conn_type:=', conn_type, ' ',
             'model:=', denso_robot_model, ' ',
             'send_format:=', send_format, ' ',
             'recv_format:=', recv_format, ' ',

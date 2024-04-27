@@ -39,13 +39,13 @@
 #define M_2_MM(x) ((x)*1000.0)
 #define MM_2_M(x) ((x) / 1000.0)
 
-
+#if 0
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   HRESULT hr;
 
-  auto node = rclcpp::Node::make_shared("denso_robot_control");
+  auto node = rclcpp::Node::make_shared("denso_robot_control2");
 
   std::string robot_name, ip_address;
   int joints, arm_group, send_format, recv_format, ctrl_type;
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     return 0;
   }
 }
-
+#endif
 
 namespace denso_robot_control
 {
@@ -126,6 +126,7 @@ namespace denso_robot_control
     for (int i = 0; i < robot_joints; i++) {
       type_[i] = joint_type[i];
     }
+    nice(-20);
   }
 
   DensoRobotControl::~DensoRobotControl()
@@ -138,6 +139,17 @@ namespace denso_robot_control
     if (NULL == node_) {
       node_ = rclcpp::Node::make_shared(node_name_, node_namespace_);
     }
+    start_time_ = getTime();
+    prev_time_ = start_time_;
+
+    for(int i=0;i<robot_joints_;i++){
+      std::string name = "robot_description_planning.joint_limits.joint_"+std::to_string(i+1)+".max_velocity";
+      node_->declare_parameter(name, 0.0);
+      limit_[i] = node_->get_parameter(name).as_double();
+    }
+
+    node_->declare_parameter("denso_bcap_slave_control_cycle_msec", 8.0);
+    cycle_sec_ = node_->get_parameter("denso_bcap_slave_control_cycle_msec").as_double() / 1000.0;
 
     joint_.resize(robot_joints_);
     memset(cmd_, 0, sizeof(cmd_));
@@ -165,6 +177,7 @@ namespace denso_robot_control
       RCLCPP_INFO(
         rclcpp::get_logger(node_->get_name()), "[DEBUG] Initializing b-cap engine ...");
     }
+
     HRESULT hr = eng_->Initialize();
     if (FAILED(hr)) {
       RCLCPP_FATAL(
@@ -505,6 +518,16 @@ namespace denso_robot_control
     return;
   }
 
+  double DensoRobotControl::adjust_target(double pos, double prev_pos, double dt, double limit) {
+    double v = (pos - prev_pos)/dt;
+    if (v < -limit) {
+      return prev_pos - limit * cycle_sec_;
+    }else if(v > limit){
+      return prev_pos + limit * cycle_sec_;
+    }
+    return pos;
+  }
+
   void DensoRobotControl::write(std::vector<double>& cmd_interface)
   {
     std::unique_lock<std::mutex> lock_mode(mtx_mode_);
@@ -512,8 +535,13 @@ namespace denso_robot_control
       std::vector<double> pose;
       pose.resize(JOINT_MAX);
       int bits = 0x0000;
+
+      double dt = getTime().seconds() - prev_time_.seconds();
+      std::cerr << ", " << dt << ", ";
+
       for (int i = 0; i < robot_joints_; i++) {
-        cmd_[i] = cmd_interface[i];
+        std::cerr << cmd_interface[i] << ", ";
+        cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], dt, limit_[i]);
         switch (type_[i]) {
           case 0:  // prismatic
             pose[i] = M_2_MM(cmd_[i]);
@@ -528,11 +556,14 @@ namespace denso_robot_control
         }
         bits |= (1 << i);
       }
+      std::cerr << std::endl;
+
       // TODO: what is the purpose of this "push_back" function call ?
       // why "0x400000 | bits" ?
       pose.push_back(0x400000 | bits);
 
       HRESULT hr = rob_->ExecSlaveMove(pose, joint_);
+      prev_time_ = getTime();
       if (SUCCEEDED(hr)) {
         if (recv_format_ & DensoRobot::RECVFMT_HANDIO) {
           std_msgs::msg::UInt32 msg;

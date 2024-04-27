@@ -208,6 +208,7 @@ CallbackReturn DensoRobotHW::on_activate(const rclcpp_lifecycle::State & previou
 
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "Initializing drivers ...");
   HRESULT hr = drobo_->Initialize(pos_interface_, cmd_interface_);
+  
   if (FAILED(hr)) {
     RCLCPP_FATAL(
       rclcpp::get_logger("DensoRobotHW"), "Failed to initialize real controller. (%X)", hr);

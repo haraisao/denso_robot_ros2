@@ -34,6 +34,10 @@ DensoController::DensoController(
   for (int srvs = DensoBase::SRV_MIN; srvs <= DensoBase::SRV_MAX; srvs++) {
     BCAPService_Ptr service = std::make_shared<bcap_service::BCAPService>(m_node, m_addr);
     service->parseParams();
+
+#if CONNTYPE_TCP_ONLY
+    service->put_Type("tcp");
+#else
     switch (srvs) {
       case DensoBase::SRV_ACT:
         service->put_Type("udp");
@@ -42,6 +46,7 @@ DensoController::DensoController(
         service->put_Type("tcp");
         break;
     }
+#endif
     m_vecService.push_back(service);
   }
 }
