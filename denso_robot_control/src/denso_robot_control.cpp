@@ -148,8 +148,8 @@ namespace denso_robot_control
       limit_[i] = node_->get_parameter(name).as_double();
     }
 
-    node_->declare_parameter("denso_bcap_slave_control_cycle_msec", 8.0);
-    cycle_sec_ = node_->get_parameter("denso_bcap_slave_control_cycle_msec").as_double() / 1000.0;
+    node_->declare_parameter("bcap_slave_control_cycle_sec", 0.008);
+    cycle_sec_ = node_->get_parameter("bcap_slave_control_cycle_sec").as_double();
 
     joint_.resize(robot_joints_);
     memset(cmd_, 0, sizeof(cmd_));

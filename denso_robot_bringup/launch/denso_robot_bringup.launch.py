@@ -313,7 +313,8 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_controllers,
-            denso_robot_control_parameters
+            denso_robot_control_parameters,
+            robot_limits_file,
         ],
         output={
             'stdout': 'screen',

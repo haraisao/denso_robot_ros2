@@ -1,5 +1,6 @@
 /**:
   ros__parameters:
+    bcap_slave_control_cycle_sec: 0.008
     robot_description_planning:
       joint_limits:
         joint_1:
