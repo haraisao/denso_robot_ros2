@@ -539,7 +539,7 @@ namespace denso_robot_control
       int bits = 0x0000;
       rclcpp::Time cur =  getTime();
       double dt = cur.seconds() - prev_time_.seconds();
-      std::cerr << ", " << dt << ", " << std::endl;
+      //std::cerr << ", " << dt << ", " << std::endl;
       prev_time_ = cur;
       for (int i = 0; i < robot_joints_; i++) {
         //std::cerr << cmd_interface[i] << ", ";
