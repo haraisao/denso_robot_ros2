@@ -103,7 +103,7 @@ public:
     else if (v > limit) { return limit; }
     else { return v; }
   }
-  double adjust_target(double pos, double prev_pos,  double dt, double limit);
+  double adjust_target(double pos, double prev_pos, double limit, int i);
 
 private:
 

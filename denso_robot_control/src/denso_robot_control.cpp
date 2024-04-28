@@ -518,11 +518,13 @@ namespace denso_robot_control
     return;
   }
 
-  double DensoRobotControl::adjust_target(double pos, double prev_pos, double dt, double limit) {
-    double v = (pos - prev_pos)/dt;
+  double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, int i) {
+    double v = (pos - prev_pos)/cycle_sec_;
     if (v < -limit) {
+      std::cerr << "Under limit:(" << i<< "):" << limit << ":" << v << std::endl;
       return prev_pos - limit * cycle_sec_;
     }else if(v > limit){
+      std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
       return prev_pos + limit * cycle_sec_;
     }
     return pos;
@@ -537,11 +539,11 @@ namespace denso_robot_control
       int bits = 0x0000;
 
       double dt = getTime().seconds() - prev_time_.seconds();
-      std::cerr << ", " << dt << ", ";
+      //std::cerr << ", " << dt << ", ";
 
       for (int i = 0; i < robot_joints_; i++) {
-        std::cerr << cmd_interface[i] << ", ";
-        cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], dt, limit_[i]);
+        //std::cerr << cmd_interface[i] << ", ";
+        cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], i);
         switch (type_[i]) {
           case 0:  // prismatic
             pose[i] = M_2_MM(cmd_[i]);
@@ -556,7 +558,7 @@ namespace denso_robot_control
         }
         bits |= (1 << i);
       }
-      std::cerr << std::endl;
+      //std::cerr << std::endl;
 
       // TODO: what is the purpose of this "push_back" function call ?
       // why "0x400000 | bits" ?
