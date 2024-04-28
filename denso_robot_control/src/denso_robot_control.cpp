@@ -537,10 +537,10 @@ namespace denso_robot_control
       std::vector<double> pose;
       pose.resize(JOINT_MAX);
       int bits = 0x0000;
-
-      double dt = getTime().seconds() - prev_time_.seconds();
-      //std::cerr << ", " << dt << ", ";
-
+      rclcpp::Time cur =  getTime();
+      double dt = cur.seconds() - prev_time_.seconds();
+      std::cerr << ", " << dt << ", " << std::endl;
+      prev_time_ = cur;
       for (int i = 0; i < robot_joints_; i++) {
         //std::cerr << cmd_interface[i] << ", ";
         cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], i);
@@ -565,7 +565,6 @@ namespace denso_robot_control
       pose.push_back(0x400000 | bits);
 
       HRESULT hr = rob_->ExecSlaveMove(pose, joint_);
-      prev_time_ = getTime();
       if (SUCCEEDED(hr)) {
         if (recv_format_ & DensoRobot::RECVFMT_HANDIO) {
           std_msgs::msg::UInt32 msg;
