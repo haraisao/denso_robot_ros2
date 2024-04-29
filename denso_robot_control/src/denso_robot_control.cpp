@@ -518,7 +518,8 @@ namespace denso_robot_control
     return;
   }
 
-  double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, int i) {
+  double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, double dt. int i) {
+#if 1
     double v = (pos - prev_pos)/cycle_sec_;
     if (v < -limit) {
       std::cerr << "Under limit:(" << i<< "):" << limit << ":" << v << std::endl;
@@ -528,6 +529,12 @@ namespace denso_robot_control
       return prev_pos + limit * cycle_sec_;
     }
     return pos;
+#else
+    double v = (pos - prev_pos)/dt;
+    if (v < -limit) { v = -limit; }
+    else if(v > limit) { v = limit; }
+    return prev_pos + v * cycle_sec_ 
+#endif
   }
 
   void DensoRobotControl::write(std::vector<double>& cmd_interface)
@@ -543,7 +550,7 @@ namespace denso_robot_control
       prev_time_ = cur;
       for (int i = 0; i < robot_joints_; i++) {
         //std::cerr << cmd_interface[i] << ", ";
-        cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], i);
+        cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
         switch (type_[i]) {
           case 0:  // prismatic
             pose[i] = M_2_MM(cmd_[i]);
