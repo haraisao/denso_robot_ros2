@@ -518,7 +518,7 @@ namespace denso_robot_control
     return;
   }
 
-  double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, double dt. int i) {
+  double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, double dt, int i) {
 #if 1
     double v = (pos - prev_pos)/cycle_sec_;
     if (v < -limit) {
