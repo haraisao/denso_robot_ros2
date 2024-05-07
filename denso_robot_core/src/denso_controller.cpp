@@ -23,6 +23,7 @@
  */
 
 #include "denso_robot_core/denso_controller.h"
+//#define CONNTYPE_TCP_ONLY 1
 
 namespace denso_robot_core {
 
@@ -35,7 +36,7 @@ DensoController::DensoController(
     BCAPService_Ptr service = std::make_shared<bcap_service::BCAPService>(m_node, m_addr);
     service->parseParams();
 
-#if CONNTYPE_TCP_ONLY
+#ifdef CONNTYPE_TCP_ONLY
     service->put_Type("tcp");
 #else
     switch (srvs) {

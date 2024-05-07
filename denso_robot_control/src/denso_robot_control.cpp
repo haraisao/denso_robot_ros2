@@ -519,13 +519,13 @@ namespace denso_robot_control
   }
 
   double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, double dt, int i) {
-#if 1
+#if 0
     double v = (pos - prev_pos)/cycle_sec_;
     if (v < -limit) {
-      std::cerr << "Under limit:(" << i<< "):" << limit << ":" << v << std::endl;
+      //std::cerr << "Under limit:(" << i<< "):" << limit << ":" << v << std::endl;
       return prev_pos - limit * cycle_sec_;
     }else if(v > limit){
-      std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
+      //std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
       return prev_pos + limit * cycle_sec_;
     }
     return pos;
@@ -533,7 +533,7 @@ namespace denso_robot_control
     double v = (pos - prev_pos)/dt;
     if (v < -limit) { v = -limit; }
     else if(v > limit) { v = limit; }
-    return prev_pos + v * cycle_sec_ 
+    return prev_pos + v * cycle_sec_ ;
 #endif
   }
 
@@ -544,12 +544,12 @@ namespace denso_robot_control
       std::vector<double> pose;
       pose.resize(JOINT_MAX);
       int bits = 0x0000;
-      rclcpp::Time cur =  getTime();
+      rclcpp::Time cur = getTime();
       double dt = cur.seconds() - prev_time_.seconds();
-      //std::cerr << ", " << dt << ", " << std::endl;
+      //std::cerr << ", " << dt << ", "  ; //<< std::endl;
       prev_time_ = cur;
       for (int i = 0; i < robot_joints_; i++) {
-        //std::cerr << cmd_interface[i] << ", ";
+        //std::cerr << cmd_interface[i] << ", " << limit_[i] << ", ";
         cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
         switch (type_[i]) {
           case 0:  // prismatic
