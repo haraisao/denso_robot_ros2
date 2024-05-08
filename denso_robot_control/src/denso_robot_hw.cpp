@@ -24,7 +24,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include <unistd.h>
 
 namespace denso_robot_control {
 
@@ -36,8 +35,6 @@ CallbackReturn DensoRobotHW::on_init(
   vel_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   eff_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   cmd_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-
-  nice(-20);
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints) {
     // Denso robots allow exactly one command interface on each joint (POSITION type).
