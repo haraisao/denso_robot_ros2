@@ -126,7 +126,6 @@ namespace denso_robot_control
     for (int i = 0; i < robot_joints; i++) {
       type_[i] = joint_type[i];
     }
-    nice(-20);
   }
 
   DensoRobotControl::~DensoRobotControl()
@@ -301,11 +300,12 @@ namespace denso_robot_control
       std::bind(&DensoRobotControl::ChangeModeFunction, this, std::placeholders::_1, std::placeholders::_2));
 
     pub_cur_mode_ = node_->create_publisher<std_msgs::msg::Int32>("CurMode", 1);
+    pub_error_code_ = node_->create_publisher<std_msgs::msg::UInt32>("ErrorCode", 1);
 
     if (verbose_) {
       RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Changing to slave mode ...");
     }
-    hr = ChangeModeWithClearError(DensoRobot::SLVMODE_SYNC_WAIT | DensoRobot::SLVMODE_POSE_J);
+    hr = ChangeModeWithClearError(DensoRobot::SLVMODE_SYNC_WAIT | DensoRobot::SLVMODE_POSE_J);  // (0x0200 | 0x0002)
     if (FAILED(hr)) {
       printErrorDescription(hr, "Failed to change to slave mode");
       return hr;
@@ -486,7 +486,7 @@ namespace denso_robot_control
       rclcpp::get_logger(node_->get_name()), "%s (%X)", error_message.c_str(), error_code);
   }
 
-  void DensoRobotControl::read(std::vector<double>& pos_interface)
+  hardware_interface::return_type DensoRobotControl::read(std::vector<double>& pos_interface)
   {
     std::unique_lock<std::mutex> lock_mode(mtx_mode_);
 
@@ -495,6 +495,7 @@ namespace denso_robot_control
       HRESULT hr = rob_->ExecCurJnt(joint_);
       if (FAILED(hr)) {
         RCLCPP_FATAL(rclcpp::get_logger("DensoRobotHW"), "Failed to get current joint. (%X)", hr);
+
       }
     }
 
@@ -515,7 +516,7 @@ namespace denso_robot_control
       pos_interface[i] = pos_[i];
     }
 
-    return;
+    return return_type::OK;
   }
 
   double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, double dt, int i) {
@@ -537,17 +538,21 @@ namespace denso_robot_control
 #endif
   }
 
-  void DensoRobotControl::write(std::vector<double>& cmd_interface)
+  hardware_interface::return_type DensoRobotControl::write(std::vector<double>& cmd_interface, double duration)
   {
     std::unique_lock<std::mutex> lock_mode(mtx_mode_);
     if (eng_->get_Mode() != DensoRobot::SLVMODE_NONE) {
       std::vector<double> pose;
       pose.resize(JOINT_MAX);
       int bits = 0x0000;
+#if 0
       rclcpp::Time cur = getTime();
       double dt = cur.seconds() - prev_time_.seconds();
       //std::cerr << ", " << dt << ", "  ; //<< std::endl;
       prev_time_ = cur;
+#else
+      double dt = duration;
+#endif
       for (int i = 0; i < robot_joints_; i++) {
         //std::cerr << cmd_interface[i] << ", " << limit_[i] << ", ";
         cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
@@ -595,10 +600,14 @@ namespace denso_robot_control
         }
       } else if (FAILED(hr) && (hr != DensoRobot::E_BUF_FULL)) {
         int error_count = 0;
+        
+        std_msgs::msg::UInt32 msg;
+        msg.data = hr;
+        pub_error_code_->publish(msg);
 
         printErrorDescription(hr, "Failed to write");
         if (!hasError()) {
-          return;
+          return return_type::OK;
         }
         RCLCPP_FATAL(
           rclcpp::get_logger(node_->get_name()), "Automatically change to normal mode.");
@@ -611,20 +620,21 @@ namespace denso_robot_control
             std::string error_message;
             hr = ctrl_->ExecGetCurErrorInfo(i, error_code, error_message);
             if (FAILED(hr)) {
-              return;
+              return return_type::OK;
+              //return return_type::ERROR;
             }
             RCLCPP_FATAL(
               rclcpp::get_logger(node_->get_name()), "  [%d] %s (%X)", i + 1, error_message.c_str(), error_code);
           }
         }
+        //return return_type::ERROR;
       }
     } else {
       for (int i = 0; i < robot_joints_; i++) {
         cmd_interface[i] = pos_[i];
       }
     }
-
-    return;
+    return return_type::OK;
   }
 
   void DensoRobotControl::Update()

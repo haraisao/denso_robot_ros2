@@ -90,8 +90,8 @@ public:
     node_ = node;
   }
 
-  void read(std::vector<double>& pos_interface);
-  void write(std::vector<double>& cmd_interface);
+  hardware_interface::return_type read(std::vector<double>& pos_interface);
+  hardware_interface::return_type write(std::vector<double>& cmd_interface, double dt);
   void Start();
   void Stop();
   void Update();
@@ -163,6 +163,7 @@ private:
   rclcpp::Publisher<denso_robot_core_interfaces::msg::UserIO>::SharedPtr pub_recv_user_io_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr pub_current_;
 
+  rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_error_code_;
   // ChangeMode Service
   rclcpp::Service<denso_robot_core_interfaces::srv::ChangeMode>::SharedPtr change_mode_srv_;
 
