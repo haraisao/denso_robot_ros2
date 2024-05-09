@@ -45,6 +45,8 @@
 // Message (std_msgs)
 #include "std_msgs/msg/u_int32.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
+// Action
+#include <control_msgs/action/follow_joint_trajectory.hpp>
 // DENSO libraries
 #include "denso_robot_core/denso_robot_core.h"
 #include "denso_robot_core/denso_controller.h"
@@ -166,6 +168,8 @@ private:
   rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_error_code_;
   // ChangeMode Service
   rclcpp::Service<denso_robot_core_interfaces::srv::ChangeMode>::SharedPtr change_mode_srv_;
+
+  rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr action_client_;
 
   std::mutex mtx_mode_;
 

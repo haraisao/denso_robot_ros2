@@ -302,6 +302,10 @@ namespace denso_robot_control
     pub_cur_mode_ = node_->create_publisher<std_msgs::msg::Int32>("CurMode", 1);
     pub_error_code_ = node_->create_publisher<std_msgs::msg::UInt32>("ErrorCode", 1);
 
+    action_client_ = rclcpp_action::create_client<control_msgs::action::FollowJointTrajectory>(node_,
+          "/denso_joint_trajectory_controller/follow_joint_trajectory");
+
+
     if (verbose_) {
       RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Changing to slave mode ...");
     }
@@ -553,9 +557,13 @@ namespace denso_robot_control
 #else
       double dt = duration;
 #endif
+#ifdef DEBUG
       std::cerr << ", " << dt << ", "; // << std::endl;
+#endif
       for (int i = 0; i < robot_joints_; i++) {
+#ifdef DEBUG
         std::cerr << cmd_interface[i] << ", " ; // << limit_[i] << ", ";
+#endif
         cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
         switch (type_[i]) {
           case 0:  // prismatic
@@ -571,8 +579,9 @@ namespace denso_robot_control
         }
         bits |= (1 << i);
       }
+#ifdef DEBUG
       std::cerr << std::endl;
-
+#endif
       // TODO: what is the purpose of this "push_back" function call ?
       // why "0x400000 | bits" ?
       pose.push_back(0x400000 | bits);
@@ -605,6 +614,7 @@ namespace denso_robot_control
         std_msgs::msg::UInt32 msg;
         msg.data = hr;
         pub_error_code_->publish(msg);
+        action_client_->async_cancel_all_goals();
 
         printErrorDescription(hr, "Failed to write");
         if (!hasError()) {
