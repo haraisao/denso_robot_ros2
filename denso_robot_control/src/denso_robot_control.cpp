@@ -553,8 +553,9 @@ namespace denso_robot_control
 #else
       double dt = duration;
 #endif
+      std::cerr << ", " << dt << ", "; // << std::endl;
       for (int i = 0; i < robot_joints_; i++) {
-        //std::cerr << cmd_interface[i] << ", " << limit_[i] << ", ";
+        std::cerr << cmd_interface[i] << ", " ; // << limit_[i] << ", ";
         cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
         switch (type_[i]) {
           case 0:  // prismatic
@@ -570,7 +571,7 @@ namespace denso_robot_control
         }
         bits |= (1 << i);
       }
-      //std::cerr << std::endl;
+      std::cerr << std::endl;
 
       // TODO: what is the purpose of this "push_back" function call ?
       // why "0x400000 | bits" ?
@@ -620,14 +621,14 @@ namespace denso_robot_control
             std::string error_message;
             hr = ctrl_->ExecGetCurErrorInfo(i, error_code, error_message);
             if (FAILED(hr)) {
-              return return_type::OK;
-              //return return_type::ERROR;
+              //return return_type::OK;
+              return return_type::ERROR;
             }
             RCLCPP_FATAL(
               rclcpp::get_logger(node_->get_name()), "  [%d] %s (%X)", i + 1, error_message.c_str(), error_code);
           }
         }
-        //return return_type::ERROR;
+        return return_type::ERROR;
       }
     } else {
       for (int i = 0; i < robot_joints_; i++) {

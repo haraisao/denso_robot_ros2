@@ -235,15 +235,23 @@ hardware_interface::return_type DensoRobotHW::read(const rclcpp::Time & time, co
 {
   std::unique_lock<std::mutex> lock_mode(mtx_mode_);
   // read robot current position
+#if 0
   return drobo_->read(pos_interface_);
-  //return return_type::OK;
+#else
+  drobo_->read(pos_interface_);
+  return return_type::OK;
+#endif
 }
 
 hardware_interface::return_type DensoRobotHW::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   std::unique_lock<std::mutex> lock_mode(mtx_mode_);
+#if 0
   return drobo_->write(cmd_interface_, period.seconds());
-  //return return_type::OK;
+#else
+  drobo_->write(cmd_interface_, period.seconds());
+  return return_type::OK;
+#endif
 }
 
 // ***************************************************************************************************
