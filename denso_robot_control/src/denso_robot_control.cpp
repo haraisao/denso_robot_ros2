@@ -518,13 +518,16 @@ namespace denso_robot_control
           break;
       }
       pos_interface[i] = pos_[i];
+      if (eng_->get_Mode() == DensoRobot::SLVMODE_NONE) {
+        cmd_[i] = pos_[i];
+      }
     }
 
     return return_type::OK;
   }
 
   double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, double dt, int i) {
-#if 0
+#if 1
     double v = (pos - prev_pos)/cycle_sec_;
     if (v < -limit) {
       //std::cerr << "Under limit:(" << i<< "):" << limit << ":" << v << std::endl;
@@ -541,6 +544,8 @@ namespace denso_robot_control
     return prev_pos + v * cycle_sec_ ;
 #endif
   }
+
+ //#define DEBUG 1
 
   hardware_interface::return_type DensoRobotControl::write(std::vector<double>& cmd_interface, double duration)
   {
@@ -643,6 +648,7 @@ namespace denso_robot_control
     } else {
       for (int i = 0; i < robot_joints_; i++) {
         cmd_interface[i] = pos_[i];
+        //cmd_[i] = pos_[i];
       }
     }
     return return_type::OK;
