@@ -141,14 +141,16 @@ namespace denso_robot_control
     start_time_ = getTime();
     prev_time_ = start_time_;
 
+    node_->declare_parameter("bcap_slave_control_cycle_sec", 0.008);
+    cycle_sec_ = node_->get_parameter("bcap_slave_control_cycle_sec").as_double();
+
     for(int i=0;i<robot_joints_;i++){
       std::string name = "robot_description_planning.joint_limits.joint_"+std::to_string(i+1)+".max_velocity";
       node_->declare_parameter(name, 0.0);
-      limit_[i] = node_->get_parameter(name).as_double();
+      limit_[i] = node_->get_parameter(name).as_double() * cycle_sec_;
     }
 
-    node_->declare_parameter("bcap_slave_control_cycle_sec", 0.008);
-    cycle_sec_ = node_->get_parameter("bcap_slave_control_cycle_sec").as_double();
+
 
     joint_.resize(robot_joints_);
     memset(cmd_, 0, sizeof(cmd_));
@@ -528,13 +530,13 @@ namespace denso_robot_control
 
   double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, double dt, int i) {
 #if 1
-    double v = (pos - prev_pos)/cycle_sec_;
+    double v = pos - prev_pos;
     if (v < -limit) {
-      //std::cerr << "Under limit:(" << i<< "):" << limit << ":" << v << std::endl;
-      return prev_pos - limit * cycle_sec_;
+      std::cerr << "Under limit:(" << i<< "):" << -limit << ":" << v << std::endl;
+      return prev_pos - limit;
     }else if(v > limit){
-      //std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
-      return prev_pos + limit * cycle_sec_;
+      std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
+      return prev_pos + limit;
     }
     return pos;
 #else
@@ -547,8 +549,9 @@ namespace denso_robot_control
 
  //#define DEBUG 1
 
-  hardware_interface::return_type DensoRobotControl::write(std::vector<double>& cmd_interface, double duration)
+  hardware_interface::return_type DensoRobotControl::write(std::vector<double>& cmd_interface, std::vector<double>& prev_cmd_interface, double duration)
   {
+    //if(duration < cycle_sec_/3){ return return_type::OK;}
     std::unique_lock<std::mutex> lock_mode(mtx_mode_);
     if (eng_->get_Mode() != DensoRobot::SLVMODE_NONE) {
       std::vector<double> pose;
@@ -567,8 +570,11 @@ namespace denso_robot_control
 #endif
       for (int i = 0; i < robot_joints_; i++) {
 #ifdef DEBUG
+      if(cmd_vel_interface[i] != 0){
         std::cerr << cmd_interface[i] << ", " ; // << limit_[i] << ", ";
+      }
 #endif
+        //cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
         cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
         switch (type_[i]) {
           case 0:  // prismatic

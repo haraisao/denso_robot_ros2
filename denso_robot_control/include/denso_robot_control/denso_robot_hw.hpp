@@ -89,6 +89,8 @@ public:
   HardwareInfo info_;
   // Store the commands for the real robot
   std::vector<double> cmd_interface_;
+  std::vector<double> prev_cmd_interface_;
+  std::vector<double> cmd_vel_interface_;
   std::vector<double> pos_interface_;
   std::vector<double> vel_interface_;
   std::vector<double> eff_interface_;

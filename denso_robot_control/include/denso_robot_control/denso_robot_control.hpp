@@ -93,7 +93,7 @@ public:
   }
 
   hardware_interface::return_type read(std::vector<double>& pos_interface);
-  hardware_interface::return_type write(std::vector<double>& cmd_interface, double dt);
+  hardware_interface::return_type write(std::vector<double>& cmd_interface, std::vector<double>& prev_cmd_interface,double dt);
   void Start();
   void Stop();
   void Update();
