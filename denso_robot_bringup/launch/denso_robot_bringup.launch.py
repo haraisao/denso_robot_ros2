@@ -72,25 +72,27 @@ def launch_setup(context, *args, **kwargs):
     moveit_config = (
         MoveItConfigsBuilder("denso_robot", robot_description="robot_description",
                              package_name="denso_robot_moveit_config")
-        .robot_description(file_path=get_package_share_directory(str(description_package.perform(context))) + "/urdf/" + str(description_file.perform(context)),
-                           mappings={
-                            "ip_address": str(ip_address.perform(context)),
-                            "model": str(denso_robot_model.perform(context)),
-                            "send_format": str(send_format.perform(context)),
-                            "recv_format": str(recv_format.perform(context)),
-                            "namespace": str(namespace.perform(context)),
-                            "verbose": str(verbose.perform(context)),
-                            "sim": str(sim.perform(context)),
-                            "with_tool": str(with_tool.perform(context)),
-                            "ros2_control_hardware_type": str(ros2_control_hardware_type.perform(context)),
-                            },
-                            )
-        .robot_description_semantic(file_path="srdf/denso_robot.srdf.xacro",
-                           mappings={
-                            "model": robot_name,
-                            "namespace": str(namespace.perform(context)),
-                            },
-                            )
+        .robot_description(
+            file_path=os.path.join(
+                get_package_share_directory(str(description_package.perform(context))),
+                        "urdf", str(description_file.perform(context))),
+            mappings={  "ip_address": str(ip_address.perform(context)),
+                        "model": str(denso_robot_model.perform(context)),
+                        "send_format": str(send_format.perform(context)),
+                        "recv_format": str(recv_format.perform(context)),
+                        "namespace": str(namespace.perform(context)),
+                        "verbose": str(verbose.perform(context)),
+                        "sim": str(sim.perform(context)),
+                        "with_tool": str(with_tool.perform(context)),
+                        "ros2_control_hardware_type": str(ros2_control_hardware_type.perform(context)),
+                    },
+            )
+        .robot_description_semantic(
+            file_path="srdf/denso_robot.srdf.xacro",
+            mappings={  "model": robot_name,
+                        "namespace": str(namespace.perform(context)),
+                    },
+            )
         .planning_scene_monitor(
             publish_robot_description=True,
             publish_robot_description_semantic=True,
@@ -110,16 +112,12 @@ def launch_setup(context, *args, **kwargs):
         .to_moveit_configs()
     )
 
-    # 今のaptのバージョンだと以下のように追加で設定する必要がある
-    # https://github.com/ros-planning/moveit2/pull/2270
-    # 上記がマージされたバージョンがaptで入ると
-    # denso_robot_moveit_config/config/pilz_industrial_motion_planner_planning.yaml
-    # での設定が正常に読み込まれるはずなので下記は不要。
+    #
     move_group_capabilities = {
         "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService"
     }
 
-    # Start the actual move_group node/action server
+    #
     # Start the actual move_group node/action server
     run_move_group_node = Node(
         package="moveit_ros_move_group",
@@ -236,7 +234,6 @@ def launch_setup(context, *args, **kwargs):
         output='screen'
     )
 # -------------------
-
     nodes_to_start = [
         set_param_use_sim_time,
         rviz_node,
