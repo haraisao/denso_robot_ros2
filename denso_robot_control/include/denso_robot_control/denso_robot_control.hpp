@@ -93,19 +93,14 @@ public:
   }
 
   hardware_interface::return_type read(std::vector<double>& pos_interface);
-  hardware_interface::return_type write(std::vector<double>& cmd_interface, std::vector<double>& prev_cmd_interface,double dt);
+  hardware_interface::return_type write(std::vector<double>& cmd_interface, double dt);
   void Start();
   void Stop();
   void Update();
 
   bool isSlaveSyncMode() const;
 
-  double adjust_velocity(double v, double limit){
-    if (v < -limit) { return -limit; }
-    else if (v > limit) { return limit; }
-    else { return v; }
-  }
-  double adjust_target(double pos, double prev_pos, double limit, double dt, int i);
+  double adjust_target(double pos, double prev_pos, double limit, int i);
 
 private:
 
@@ -130,8 +125,6 @@ private:
   rclcpp::Time start_time_, prev_time_;
   double limit_[JOINT_MAX];
   double cycle_sec_;
-
-
 
   HRESULT ChangeModeWithClearError(int mode);
 

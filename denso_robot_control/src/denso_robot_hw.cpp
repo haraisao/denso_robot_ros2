@@ -35,8 +35,6 @@ CallbackReturn DensoRobotHW::on_init(
   vel_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   eff_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   cmd_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  prev_cmd_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  cmd_vel_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints) {
     // Denso robots allow exactly one command interface on each joint (POSITION type).
@@ -141,8 +139,6 @@ CallbackReturn DensoRobotHW::on_activate(const rclcpp_lifecycle::State & previou
   for (uint i = 0; i < pos_interface_.size(); i++) {
     if (std::isnan(pos_interface_[i])) {
       cmd_interface_[i] = 0;
-      prev_cmd_interface_[i] = 0;
-      cmd_vel_interface_[i] = 0;
       pos_interface_[i] = 0;
       vel_interface_[i] = 0;
       eff_interface_[i] = 0;
@@ -253,23 +249,7 @@ hardware_interface::return_type DensoRobotHW::write(const rclcpp::Time & time, c
 #if 0
   return drobo_->write(cmd_interface_, period.seconds());
 #else
-/**
-  for (uint i = 0; i < cmd_interface_.size(); i++) {
-    cmd_vel_interface_[i] = (cmd_interface_[i] - prev_cmd_interface_[i]);
-    if(cmd_vel_interface_[i] < 0.000001 and cmd_vel_interface_[i] > -0.000001){
-      cmd_vel_interface_[i] = 0;
-    }
-    if (period.seconds() > 0.0001){
-      cmd_vel_interface_[i] /= period.seconds();
-    }else{
-      cmd_vel_interface_[i]=0;
-    }
-  }
-  */
-  drobo_->write(cmd_interface_, prev_cmd_interface_, period.seconds());
-  for (uint i = 0; i < cmd_interface_.size(); i++) {
-    prev_cmd_interface_[i] = cmd_interface_[i];
-  }
+  drobo_->write(cmd_interface_, period.seconds());
   return return_type::OK;
 #endif
 }

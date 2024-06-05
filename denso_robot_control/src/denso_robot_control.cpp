@@ -528,8 +528,7 @@ namespace denso_robot_control
     return return_type::OK;
   }
 
-  double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, double dt, int i) {
-#if 1
+  double DensoRobotControl::adjust_target(double pos, double prev_pos, double limit, int i) {
     double v = pos - prev_pos;
     if (v < -limit) {
       std::cerr << "Under limit:(" << i<< "):" << -limit << ":" << v << std::endl;
@@ -539,17 +538,11 @@ namespace denso_robot_control
       return prev_pos + limit;
     }
     return pos;
-#else
-    double v = (pos - prev_pos)/dt;
-    if (v < -limit) { v = -limit; }
-    else if(v > limit) { v = limit; }
-    return prev_pos + v * cycle_sec_ ;
-#endif
   }
 
  //#define DEBUG 1
 
-  hardware_interface::return_type DensoRobotControl::write(std::vector<double>& cmd_interface, std::vector<double>& prev_cmd_interface, double duration)
+  hardware_interface::return_type DensoRobotControl::write(std::vector<double>& cmd_interface, double duration)
   {
     //if(duration < cycle_sec_/3){ return return_type::OK;}
     std::unique_lock<std::mutex> lock_mode(mtx_mode_);
@@ -557,15 +550,8 @@ namespace denso_robot_control
       std::vector<double> pose;
       pose.resize(JOINT_MAX);
       int bits = 0x0000;
-#if 0
-      rclcpp::Time cur = getTime();
-      double dt = cur.seconds() - prev_time_.seconds();
-      //std::cerr << ", " << dt << ", "  ; //<< std::endl;
-      prev_time_ = cur;
-#else
-      double dt = duration;
-#endif
 #ifdef DEBUG
+      double dt = duration;
       std::cerr << ", " << dt << ", "; // << std::endl;
 #endif
       for (int i = 0; i < robot_joints_; i++) {
@@ -574,8 +560,7 @@ namespace denso_robot_control
         std::cerr << cmd_interface[i] << ", " ; // << limit_[i] << ", ";
       }
 #endif
-        //cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
-        cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
+        cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], i);
         switch (type_[i]) {
           case 0:  // prismatic
             pose[i] = M_2_MM(cmd_[i]);
