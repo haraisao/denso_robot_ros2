@@ -100,22 +100,14 @@ def launch_setup(context, *args, **kwargs):
         .trajectory_execution(file_path="robots/"+robot_name+"/config/moveit_controllers.yaml")
         .joint_limits(file_path="robots/"+robot_name+"/config/joint_limits.yaml")
         .robot_description_kinematics(file_path="config/kinematics.yaml")
-        #.pilz_cartesian_limits(file_path="config/pilz_cartesian_limits.yaml")
-        .planning_pipelines(
-            #pipelines=["ompl", "pilz_industrial_motion_planner"],
-            #default_planning_pipeline="pilz_industrial_motion_planner",
-            pipelines=["ompl"],
-            default_planning_pipeline="ompl",
+        .moveit_cpp(
+            file_path=os.path.join(get_package_share_directory("denso_robot_moveit_config"),
+                                    "config", "motion_planning.yaml")
         )
         # .planning_scene_monitor()
         # .sensors_3d()
         .to_moveit_configs()
     )
-
-    #
-    move_group_capabilities = {
-        "capabilities": "pilz_industrial_motion_planner/MoveGroupSequenceAction pilz_industrial_motion_planner/MoveGroupSequenceService"
-    }
 
     #
     # Start the actual move_group node/action server
@@ -125,7 +117,6 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
         emulate_tty=True,    # colored log
         parameters=[moveit_config.to_dict(),
-                    #move_group_capabilities,
                     ],
     )
 
