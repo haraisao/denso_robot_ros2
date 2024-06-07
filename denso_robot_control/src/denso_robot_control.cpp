@@ -141,8 +141,9 @@ namespace denso_robot_control
     start_time_ = getTime();
     prev_time_ = start_time_;
 
-    node_->declare_parameter("bcap_slave_control_cycle_sec", 0.008);
-    cycle_sec_ = node_->get_parameter("bcap_slave_control_cycle_sec").as_double();
+    node_->declare_parameter("denso_bcap_slave_control_cycle_msec", 8.0);
+    cycle_sec_ = node_->get_parameter("denso_bcap_slave_control_cycle_msec").as_double()/1000.0;
+    std::cerr << "============" << cycle_sec_ << std::endl;
 
     for(int i=0;i<robot_joints_;i++){
       std::string name = "robot_description_planning.joint_limits.joint_"+std::to_string(i+1)+".max_velocity";

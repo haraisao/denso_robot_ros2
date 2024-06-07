@@ -65,10 +65,9 @@ def launch_setup(context, *args, **kwargs):
 
     denso_robot_core_pkg = get_package_share_directory('denso_robot_core')
 
-    denso_robot_control_parameters = {
-        'denso_bcap_slave_control_cycle_msec': bcap_slave_control_cycle_msec,
-        'denso_config_file': PathJoinSubstitution([denso_robot_core_pkg, 'config', 'config.xml'])}
 
+    #
+    # for move_group
     moveit_config = (
         MoveItConfigsBuilder("denso_robot", robot_description="robot_description",
                              package_name="denso_robot_moveit_config")
@@ -100,11 +99,13 @@ def launch_setup(context, *args, **kwargs):
         .trajectory_execution(file_path="robots/"+robot_name+"/config/moveit_controllers.yaml")
         .joint_limits(file_path="robots/"+robot_name+"/config/joint_limits.yaml")
         .robot_description_kinematics(file_path="config/kinematics.yaml")
+        #.planning_pipelines(
+        #    pipelines=["ompl"],
+        #    default_planning_pipeline="ompl",
+        #)
         .moveit_cpp(
-            file_path=os.path.join(get_package_share_directory("denso_robot_moveit_config"),
-                                    "config", "motion_planning.yaml")
+              file_path=os.path.join("config/motion_planning.yaml")
         )
-        # .planning_scene_monitor()
         # .sensors_3d()
         .to_moveit_configs()
     )
@@ -119,6 +120,13 @@ def launch_setup(context, *args, **kwargs):
         parameters=[moveit_config.to_dict(),
                     ],
     )
+
+    #
+    # for ros2_control
+    denso_robot_control_parameters = {
+        'denso_bcap_slave_control_cycle_msec': bcap_slave_control_cycle_msec,
+        'denso_config_file': PathJoinSubstitution([denso_robot_core_pkg, 'config', 'config.xml'])
+    }
 
 # --------- Robot Control Node (only if 'sim:=false') ---------
     robot_controllers = PathJoinSubstitution(

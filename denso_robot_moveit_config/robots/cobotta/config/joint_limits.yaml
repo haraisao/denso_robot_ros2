@@ -1,6 +1,5 @@
 
-bcap_slave_control_cycle_sec: 0.008
-
+#
 joint_limits:
   joint_1:
     has_velocity_limits: true

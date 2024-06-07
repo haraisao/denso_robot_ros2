@@ -94,8 +94,11 @@ HRESULT DensoRobotCore::Initialize()
 
   m_node->declare_parameter("denso_controller_name", "");
   m_node->declare_parameter("denso_config_file", "");
-  m_node->declare_parameter("denso_bcap_slave_control_cycle_msec", 8.0);
-
+  try{
+    m_node->declare_parameter("denso_bcap_slave_control_cycle_msec", 8.0);
+  }catch(...){
+    std::cerr << "Parameter denso_bcap_slave_control_cycle_msec is already defcared." << std::endl;
+  }
   if(!m_node->get_parameter("denso_controller_name", name)) {
     name = "";
   }
