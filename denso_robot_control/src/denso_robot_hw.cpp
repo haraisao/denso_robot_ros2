@@ -22,14 +22,20 @@
 #include <thread>
 #include <functional>
 
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 
 namespace denso_robot_control {
 
-CallbackReturn DensoRobotHW::on_init(
+hardware_interface::CallbackReturn
+DensoRobotHW::on_init(
   const hardware_interface::HardwareInfo & info)
 {
+  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS) {
+    return CallbackReturn::ERROR;
+  }
+
   info_ = info;
   pos_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   vel_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
@@ -131,7 +137,8 @@ std::vector<hardware_interface::CommandInterface> DensoRobotHW::export_command_i
   return command_interfaces;
 }
 
-CallbackReturn DensoRobotHW::on_activate(const rclcpp_lifecycle::State & previous_state)
+hardware_interface::CallbackReturn
+DensoRobotHW::on_activate(const rclcpp_lifecycle::State & previous_state)
 {
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "Starting DENSO robot drivers ...");
   // TODO: do we really need this wait time ??
@@ -153,22 +160,22 @@ CallbackReturn DensoRobotHW::on_activate(const rclcpp_lifecycle::State & previou
   std::string node_namespace = info_.hardware_parameters["node_namespace"].c_str();
   std::string robot_ip_address = info_.hardware_parameters["ip_address"];
   std::string robot_name = info_.hardware_parameters["robot_name"];
-  int robot_joints = stoi(info_.hardware_parameters["robot_joints"]);
-  int ctrl_type = stoi(info_.hardware_parameters["controller_type"]);
+  int robot_joints = std::stoi(info_.hardware_parameters["robot_joints"]);
+  int ctrl_type = std::stoi(info_.hardware_parameters["controller_type"]);
 
   std::vector<int> joint_type;
   joint_type.resize(robot_joints);
   for (int i = 0; i < robot_joints; i++) {
     std::stringstream ss;
     ss << "joint_" << i + 1;
-    joint_type[i] = stoi(info_.hardware_parameters[ss.str()]);
+    joint_type[i] = std::stoi(info_.hardware_parameters[ss.str()]);
   }
 
   int arm_group = 0;
-  arm_group = stoi(info_.hardware_parameters["arm_group"]);
+  arm_group = std::stoi(info_.hardware_parameters["arm_group"]);
 
-  int send_format = stoi(info_.hardware_parameters["send_format"]);
-  int recv_format = stoi(info_.hardware_parameters["recv_format"]);
+  int send_format = std::stoi(info_.hardware_parameters["send_format"]);
+  int recv_format = std::stoi(info_.hardware_parameters["recv_format"]);
 
   bool verbose = false;
   std::string str_true = "True";
@@ -225,17 +232,20 @@ CallbackReturn DensoRobotHW::on_activate(const rclcpp_lifecycle::State & previou
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn DensoRobotHW::on_deactivate(const rclcpp_lifecycle::State & previous_state)
+hardware_interface::CallbackReturn
+DensoRobotHW::on_deactivate(const rclcpp_lifecycle::State & previous_state)
 {
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "Stopping robot drivers... ");
   // TODO: do we really need this wait time ??
+  drobo_->Stop();
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "System successfully stopped !!");
   return CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type DensoRobotHW::read(const rclcpp::Time & time, const rclcpp::Duration & period)
+hardware_interface::return_type DensoRobotHW::read(const rclcpp::Time & /* time */,
+                                                   const rclcpp::Duration & /* period */)
 {
   std::unique_lock<std::mutex> lock_mode(mtx_mode_);
   // read robot current position
@@ -247,7 +257,8 @@ hardware_interface::return_type DensoRobotHW::read(const rclcpp::Time & time, co
 #endif
 }
 
-hardware_interface::return_type DensoRobotHW::write(const rclcpp::Time & time, const rclcpp::Duration & period)
+hardware_interface::return_type DensoRobotHW::write(const rclcpp::Time & /* time */,
+                                                    const rclcpp::Duration & period)
 {
   std::unique_lock<std::mutex> lock_mode(mtx_mode_);
 #if 0
@@ -278,13 +289,14 @@ hardware_interface::return_type DensoRobotHW::write(const rclcpp::Time & time, c
 void DensoRobotHW::SpinNode(rclcpp::Node::SharedPtr& node, DensoRobotControl_Ptr drobo)
 {
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "***** Starting DENSO robot control thread ...");
-  std::thread denso_thread([node, drobo]() {
+    std::thread denso_thread([node, drobo]() {
     rclcpp::WallRate loop_rate(1000);
     while (rclcpp::ok()) {
       rclcpp::spin_some(node);
       drobo->Update();
       loop_rate.sleep();
     }
+    rclcpp::shutdown();
   });
 
   denso_thread.detach();

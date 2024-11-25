@@ -30,12 +30,11 @@ namespace denso_robot_core {
 DensoController::DensoController(
   rclcpp::Node::SharedPtr& node, const std::string& name,
   const int* mode, const std::string& ip_address, const rclcpp::Duration dt)
-  : DensoBase(name, mode), m_node(node), m_addr(ip_address), m_duration(dt)
+  : DensoBase(name, mode), m_addr(ip_address), m_duration(dt), m_node(node)
 {
   for (int srvs = DensoBase::SRV_MIN; srvs <= DensoBase::SRV_MAX; srvs++) {
     BCAPService_Ptr service = std::make_shared<bcap_service::BCAPService>(m_node, m_addr);
     service->parseParams();
-
 #ifdef CONNTYPE_TCP_ONLY
     service->put_Type("tcp");
 #else
@@ -238,7 +237,7 @@ HRESULT DensoController::get_Variable(const std::string& name, DensoVariable_Ptr
 
 HRESULT DensoController::AddTask(XMLElement * xmlElem)
 {
-  int objs;
+  std::size_t objs;
   HRESULT hr;
 
   Name_Vec vecName;
@@ -436,8 +435,6 @@ HRESULT DensoController::ExecGetErrorDescription(
   int argc;
   VARIANT_Vec vntArgs;
   VARIANT_Ptr vntRet(new VARIANT());
-
-  VARIANT * elements;
 
   for (argc = 0; argc < BCAP_CONTROLLER_EXECUTE_ARGS; argc++) {
     VARIANT_Ptr vntTmp(new VARIANT());

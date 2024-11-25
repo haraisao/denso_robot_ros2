@@ -47,6 +47,7 @@ static const std::string kPlanningGroup = "arm";
 static const std::string kRobotNameCobotta = "cobotta";
 static const std::string kRobotNameVs060 = "vs060";
 static const std::string kRobotNameHsr065 = "hsr065";
+static const double kScaleFactor = 0.1;
 
 class DensoRobotCppDemo
 {
@@ -55,15 +56,15 @@ public:
   : node_(node), robotStatePublisher_(
       node_->create_publisher<moveit_msgs::msg::DisplayRobotState>("display_robot_state", 1))
   {
-    node_->declare_parameter("model", "cobotta");
-    node_->declare_parameter("scale_factor", "1.0");
+    node_->declare_parameter("model", kRobotNameVs060);
+    node_->declare_parameter("scale_factor", kScaleFactor);
   }
 
   void run()
   {
     RCLCPP_INFO(kLogger, "***** Initializing DensoRobotCppDemo ...");
     if(!node_->get_parameter("scale_factor", scaleFactor_)) {
-      scaleFactor_ = 0.1;
+      scaleFactor_ = kScaleFactor;
     }
     RCLCPP_INFO(kLogger, "***** DensoRobotCppDemo - Scale factor: %.2f", scaleFactor_);
 
@@ -204,7 +205,7 @@ public:
         moveit::planning_interface::MoveGroupInterface::Plan movePlanHomeVs060;
 
         bool successHomeVs060 = (
-          moveGroup.plan(movePlanHomeVs060) == moveit::core::MoveItErrorCode::SUCCESS);
+            moveGroup.plan(movePlanHomeVs060) == moveit::core::MoveItErrorCode::SUCCESS);
         RCLCPP_INFO(
           kLogger, "***** Plan to Home (joint space goal) %s",
           successHomeVs060 ? "SUCCEEDED" : "FAILED");

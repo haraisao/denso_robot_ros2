@@ -47,6 +47,7 @@ static const rclcpp::Logger kLogger = rclcpp::get_logger("denso_robot_moveit_dem
 static const std::string kPlanningGroup = "arm";
 static const std::string kRobotNameCobotta = "cobotta";
 static const std::string kRobotNameVs060 = "vs060";
+static const double kScaleFactor = 0.1;
 
 class DensoRobotPickAndPlaceDemo
 {
@@ -55,16 +56,16 @@ public:
   : node_(node), robotStatePublisher_(
       node_->create_publisher<moveit_msgs::msg::DisplayRobotState>("display_robot_state", 1))
   {
-    node_->declare_parameter("model", "");
-    node_->declare_parameter("scale_factor", "");
-    node_->declare_parameter("num_cycles", "");
+    node_->declare_parameter("model", kRobotNameVs060);
+    node_->declare_parameter("scale_factor", kScaleFactor);
+    node_->declare_parameter("num_cycles", 1);
   }
 
   void run()
   {
     RCLCPP_INFO(kLogger, "***** Initializing DensoRobotPickAndPlaceDemo ...");
     if(!node_->get_parameter("scale_factor", scaleFactor_)) {
-      scaleFactor_ = 0.1;
+      scaleFactor_ = kScaleFactor;
     }
     RCLCPP_INFO(kLogger, "***** DensoRobotPickAndPlaceDemo - Scale factor: %.2f", scaleFactor_);
 

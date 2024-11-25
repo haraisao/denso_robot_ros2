@@ -31,8 +31,6 @@
 #include <vector>
 #include <limits>
 
-#include <boost/thread.hpp>
-
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
@@ -41,7 +39,6 @@
 #include "hardware_interface/visibility_control.h"
 // ROS
 #include "rclcpp/macros.hpp"
-#include "rclcpp_lifecycle/state.hpp"
 // Message (std_msgs)
 #include "std_msgs/msg/u_int32.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
@@ -59,7 +56,6 @@ using namespace denso_robot_core;
 using namespace std_msgs;
 using hardware_interface::HardwareInfo;
 using hardware_interface::return_type;
-using hardware_interface::CallbackReturn;
 
 #define JOINT_MAX (8)
 

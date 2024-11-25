@@ -19,12 +19,13 @@ import os
 import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node, SetParameter
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.actions import ExecuteProcess
+from typing import Text
 from launch.launch_context import LaunchContext
 from launch.substitution import Substitution
 from typing import Iterable
@@ -113,11 +114,6 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'ip_address', default_value='192.168.0.1',
             description='IP address by which the robot can be reached.'))
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            'conn_type',
-            default_value='tcp',
-            description='Connection type used [udp/tcp].'))
 # Configuration arguments
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -168,7 +164,6 @@ def generate_launch_description():
 # Initialize Arguments
     denso_robot_model = LaunchConfiguration('model')
     ip_address = LaunchConfiguration('ip_address')
-    conn_type = LaunchConfiguration('conn_type')
     send_format = LaunchConfiguration('send_format')
     recv_format = LaunchConfiguration('recv_format')
     bcap_slave_control_cycle_msec = LaunchConfiguration('bcap_slave_control_cycle_msec')
@@ -196,7 +191,6 @@ def generate_launch_description():
                 [FindPackageShare(description_package), 'urdf', description_file]),
             ' ',
             'ip_address:=', ip_address, ' ',
-            'conn_type:=', conn_type, ' ',
             'model:=', denso_robot_model, ' ',
             'send_format:=', send_format, ' ',
             'recv_format:=', recv_format, ' ',
@@ -222,32 +216,14 @@ def generate_launch_description():
     robot_description_kinematics = {'robot_description_kinematics': kinematics_yaml}
 
     # Planning Configuration
-    #ompl_planning_pipeline_config = {
-    #    'move_group': {
-    #        'planning_plugin': 'ompl_interface/OMPLPlanner',
-    #        'request_adapters': 'default_planner_request_adapters/AddTimeOptimalParameterization' \
-    #            + ' default_planner_request_adapters/FixWorkspaceBounds' \
-    #            + ' default_planner_request_adapters/FixStartStateBounds' \
-    #            + ' default_planner_request_adapters/FixStartStateCollision' \
-    #            + ' default_planner_request_adapters/FixStartStatePathConstraints',
-    #        'start_state_max_bounds_error': 0.1,
-    #    }
-    #}
     ompl_planning_pipeline_config = {
-        '''
-        'move_group': {
-            'planning_plugins': ['ompl_interface/OMPLPlanner'],
-            'request_adapters': ["default_planning_request_adapters/ResolveConstraintFrames",
-                "default_planning_request_adapters/ValidateWorkspaceBounds",
-                "default_planning_request_adapters/CheckStartStateBounds",
-                "default_planning_request_adapters/CheckStartStateCollision"],
-            'response_adapters': ["default_planning_response_adapters/AddTimeOptimalParameterization",
-                "default_planning_response_adapters/ValidateSolution",
-                "default_planning_response_adapters/DisplayMotionPath"]
-        }
-        '''
         'move_group': {
             'planning_plugin': 'ompl_interface/OMPLPlanner',
+            # 'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization \
+                # default_planner_request_adapters/FixWorkspaceBounds \
+                # default_planner_request_adapters/FixStartStateBounds \
+                # default_planner_request_adapters/FixStartStateCollision \
+                # default_planner_request_adapters/FixStartStatePathConstraints""",
             'request_adapters': 'default_planner_request_adapters/AddTimeOptimalParameterization' \
                 + ' default_planner_request_adapters/FixWorkspaceBounds' \
                 + ' default_planner_request_adapters/FixStartStateBounds' \
@@ -322,7 +298,7 @@ def generate_launch_description():
             moveit_controllers_file,
             occupancy_map_monitor_parameters,
             planning_scene_monitor_parameters,
-
+            {'use_sim_time': sim}
         ])
 
 # --------- Robot Control Node (only if 'sim:=false') ---------
@@ -339,8 +315,7 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_controllers,
-            denso_robot_control_parameters,
-            robot_limits_file,
+            denso_robot_control_parameters
         ],
         output={
             'stdout': 'screen',
@@ -351,7 +326,8 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='both',
-        parameters=[robot_description])
+        parameters=[{'use_sim_time': sim}, robot_description]
+    )
 
     joint_state_broadcaster_spawner = Node(
         package='controller_manager',
@@ -403,41 +379,11 @@ def generate_launch_description():
         name='static_transform_publisher',
         output='log',
         arguments=[
-            '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'world',
-            TextJoinSubstitution([namespace], 'base_link', '')
+            '--frame-id', 'world',
+            '--child-frame-id', TextJoinSubstitution([namespace], 'base_link', '')
         ])
 
 # --------- Gazebo Nodes (only if 'sim:=true') ---------
-'''
-    set_param_use_sim_time = SetParameter(
-        name='use_sim_time', value=True,
-        condition=IfCondition(LaunchConfiguration('sim')))
-
-    world_file = os.path.join(
-        get_package_share_directory('denso_robot_moveit_config'), 'worlds', 'empty.sdf')
-
-    # Sets Paths for ignition#
-    env = {'IGN_GAZEBO_SYSTEM_PLUGIN_PATH': os.environ['LD_LIBRARY_PATH'],
-           'IGN_GAZEBO_RESOURCE_PATH': os.path.dirname(
-               get_package_share_directory('denso_robot_descriptions'))}
-
-    ign_gazebo = ExecuteProcess(
-        condition=IfCondition(sim),
-        cmd=['ign gazebo -r', world_file],
-        output='screen',
-        additional_env=env,
-        shell=True
-    )
-
-    ignition_spawn_entity_node = Node(
-        condition=IfCondition(sim),
-        package='ros_gz_sim',
-        executable='create',
-        output='screen',
-        arguments=['-topic', '/robot_description',
-                   '-name', denso_robot_model,
-                   '-allow-renaming', 'true'],)
-'''
     gazebo = ExecuteProcess(
         condition=IfCondition(sim),
         cmd=['gazebo', '--verbose', 'worlds/empty.world', '-s', 'libgazebo_ros_factory.so'],
@@ -449,17 +395,16 @@ def generate_launch_description():
         condition=IfCondition(sim),
         arguments=['-topic', 'robot_description', '-entity', denso_robot_model],
         output='screen')
-        
+
     nodes_to_start = [
-        set_param_use_sim_time,
-        ign_gazebo,
-        ignition_spawn_entity_node,
         control_node,
         robot_controller_spawner,
         move_group_node,
 #        mongodb_server_node,
         rviz_node,
         static_tf,
+        gazebo,
+        spawn_entity,
         robot_state_publisher_node,
         joint_state_broadcaster_spawner
     ]
