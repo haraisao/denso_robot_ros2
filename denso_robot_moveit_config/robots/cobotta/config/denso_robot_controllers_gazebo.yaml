@@ -1,0 +1,48 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 200  # Hz
+
+    denso_joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    denso_joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    denso_hand_controller:
+      type: position_controllers/GripperActionController
+
+
+denso_joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - joint_1
+      - joint_2
+      - joint_3
+      - joint_4
+      - joint_5
+      - joint_6
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    state_publish_rate: 200.0
+    action_monitor_rate: 20.0
+    allow_partial_joints_goal: false
+    open_loop_control: true
+    constraints:
+      stopped_velocity_tolerance: 0.0
+      goal_time: 0.0
+
+denso_hand_controller:
+  ros__parameters:
+    joint: cobotta_finger_joint1
+    #publish_rate: 50.0
+    #command_interfaces: 
+    #  - position
+    #state_interfaces: 
+    #  - position
+    #  - velocity
+    #joints:
+    #  - cobotta_finger_joint1
+    #  - cobotta_finger_joint1_mimic

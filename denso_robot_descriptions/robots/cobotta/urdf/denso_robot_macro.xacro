@@ -70,10 +70,16 @@
 
     <!-- links -  main serial chain -->
     <xacro:denso_robot_arm_kinematics namespace="$(arg namespace)" model="$(arg model)" />
+    
+    <!-- For Simulation     -->
+    <xacro:if value="${sim}">
+      <xacro:include filename="$(find denso_robot_descriptions)/robots/$(arg model)/urdf/denso_robot_hand.ros2_control.xacro" />
+      <xacro:cobotta_hand_ros2_control name="GazeboHandSystem" ros2_control_hardware_type="gazebo" />
+    </xacro:if>
 
     <gazebo>
       <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-  	    <parameters>$(find denso_robot_moveit_config)/robots/$(arg model)/config/denso_robot_controllers.yaml</parameters>
+  	    <parameters>$(find denso_robot_moveit_config)/robots/$(arg model)/config/denso_robot_controllers_gazebo.yaml</parameters>
       </plugin>
     </gazebo>
 

@@ -247,11 +247,19 @@ def generate_launch_description():
         'moveit_controller_manager': 'moveit_simple_controller_manager'\
             + '/MoveItSimpleControllerManager',
     }
-    moveit_controllers_file = PathJoinSubstitution(
-        [
-            FindPackageShare(moveit_config_package), 'robots',
-            denso_robot_model, 'config/moveit_controllers.yaml'
-        ])
+    if sim:
+        moveit_controllers_file = PathJoinSubstitution(
+            [
+                FindPackageShare(moveit_config_package), 'robots',
+                denso_robot_model, 'config/moveit_controllers_gazebo.yaml'
+            ])
+    else:
+        moveit_controllers_file = PathJoinSubstitution(
+            [
+                FindPackageShare(moveit_config_package), 'robots',
+                denso_robot_model, 'config/moveit_controllers.yaml'
+            ])
+
     trajectory_execution = {
         'moveit_manage_controllers': False,
         'trajectory_execution.allowed_execution_duration_scaling': 1.2,
@@ -347,6 +355,12 @@ def generate_launch_description():
         executable='spawner',
         arguments=[robot_controller, '-c', '/controller_manager'])
 
+    if sim:
+        hand_controller_spawner = Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=['denso_hand_controller', '--controller-manager', '/controller_manager'])
+
 # TODO: do we need the Warehouse mongodb server ?
 # (always / never / only in simulation with Gazebo ...)
     # Warehouse mongodb server
@@ -404,17 +418,31 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description', '-entity', denso_robot_model],
         output='screen')
 
-    nodes_to_start = [
-        control_node,
-        robot_controller_spawner,
-        move_group_node,
-#        mongodb_server_node,
-        rviz_node,
-        static_tf,
-        gazebo,
-        spawn_entity,
-        robot_state_publisher_node,
-        joint_state_broadcaster_spawner
-    ]
-
+    if sim:
+        nodes_to_start = [
+            control_node,
+            robot_controller_spawner,
+            hand_controller_spawner,
+            move_group_node,
+    #        mongodb_server_node,
+            rviz_node,
+            static_tf,
+            gazebo,
+            spawn_entity,
+            robot_state_publisher_node,
+            joint_state_broadcaster_spawner
+        ]
+    else:
+        nodes_to_start = [
+            control_node,
+            robot_controller_spawner,
+            move_group_node,
+    #        mongodb_server_node,
+            rviz_node,
+            static_tf,
+            gazebo,
+            spawn_entity,
+            robot_state_publisher_node,
+            joint_state_broadcaster_spawner
+        ]
     return LaunchDescription(declared_arguments + nodes_to_start)

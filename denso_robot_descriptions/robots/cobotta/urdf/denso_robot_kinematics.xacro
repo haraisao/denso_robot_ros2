@@ -206,40 +206,11 @@
 				<inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
 			</inertial>
 		</link>
-		<joint name="$(arg namespace)joint_gripper" type="revolute">
+		<joint name="$(arg namespace)joint_gripper" type="fixed">
 			<parent link="$(arg namespace)J6"/>
 			<child link="$(arg namespace)gripper_base"/>
 			<origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 0.0 0.0001"/>
 			<axis xyz="-0.000000 -0.000000 1.000000"/>
-			<limit effort="1" lower="-3.1415926575" upper="3.1415926575" velocity="3.83012504350156"/>
-			<dynamics damping="0" friction="0"/>
-		</joint>
-		<link name="$(arg namespace)right_finger">
-			<visual>
-				<origin rpy="0 0 0" xyz="0 0 0"/>
-				<geometry>
-					<mesh filename="file:///$(find denso_robot_descriptions)/robots/$(arg model)/meshes/right_finger.dae" scale="1 1 1"/>
-				</geometry>
-			</visual>
-			<collision>
-				<origin rpy="0 0 0" xyz="0 0 0"/>
-				<geometry>
-					<mesh filename="file:///$(find denso_robot_descriptions)/robots/$(arg model)/meshes/right_finger.dae" scale="1 1 1"/>
-				</geometry>
-			</collision>
-			<inertial>
-				<mass value="1"/>
-				<origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 0.000000 0.000000"/>
-				<inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
-			</inertial>
-		</link>
-		<joint name="$(arg namespace)joint_right_finger" type="prismatic">
-			<parent link="$(arg namespace)gripper_base"/>
-			<child link="$(arg namespace)right_finger"/>
-			<origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 -0.0001 0.000"/>
-			<axis xyz="0.000000 1.000000 0.000000"/>
-			<limit effort="1" lower="-0.015" upper="0.0" velocity="0.015"/>
-			<dynamics damping="0" friction="0"/>
 		</joint>
 		<link name="$(arg namespace)left_finger">
 			<visual>
@@ -260,13 +231,45 @@
 				<inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
 			</inertial>
 		</link>
-		<joint name="$(arg namespace)joint_left_finger" type="prismatic">
+		<joint name="$(arg namespace)cobotta_finger_joint1" type="prismatic">
 			<parent link="$(arg namespace)gripper_base"/>
 			<child link="$(arg namespace)left_finger"/>
 			<origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 0.0001 0.000"/>
 			<axis xyz="0.000000 1.000000 0.000000"/>
-			<limit effort="1" lower="0.0" upper="0.015" velocity="0.015"/>
-			<dynamics damping="0" friction="0"/>
+			<limit effort="20" lower="0.0" upper="0.015" velocity="0.15"/>
+
 		</joint>
+		<link name="$(arg namespace)right_finger">
+			<visual>
+				<origin rpy="0 0 0" xyz="0 0 0"/>
+				<geometry>
+					<mesh filename="file:///$(find denso_robot_descriptions)/robots/$(arg model)/meshes/right_finger.dae" scale="1 1 1"/>
+				</geometry>
+			</visual>
+			<collision>
+				<origin rpy="0 0 0" xyz="0 0 0"/>
+				<geometry>
+					<mesh filename="file:///$(find denso_robot_descriptions)/robots/$(arg model)/meshes/right_finger.dae" scale="1 1 1"/>
+				</geometry>
+			</collision>
+			<inertial>
+				<mass value="1"/>
+				<origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 0.000000 0.000000"/>
+				<inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+			</inertial>
+		</link>
+		<joint name="$(arg namespace)cobotta_finger_joint2" type="prismatic">
+			<mimic joint="cobotta_finger_joint1" multiplier="-1" offset="0" />
+			<parent link="$(arg namespace)gripper_base"/>
+			<child link="$(arg namespace)right_finger"/>
+			<origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 -0.0001 0.000"/>
+			<axis xyz="0.000000 1.000000 0.000000"/>
+			<limit effort="5" lower="-0.015" upper="0.0" velocity="0.2"/>
+		</joint>
+		<joint name="$(arg namespace)cobotta_finger_joint2_mimic" type="fixed">
+			<parent link="world" />
+			<child link="random" />
+		</joint>
+		<link name="random"/>
 	</xacro:macro>
 </robot>
