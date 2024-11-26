@@ -73,7 +73,7 @@
 
     <gazebo>
       <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-  	<parameters>$(find denso_robot_moveit_config)/robots/$(arg model)/config/denso_robot_controllers.yaml</parameters>
+  	    <parameters>$(find denso_robot_moveit_config)/robots/$(arg model)/config/denso_robot_controllers.yaml</parameters>
       </plugin>
     </gazebo>
 
