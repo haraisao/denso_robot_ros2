@@ -1150,8 +1150,9 @@ HRESULT DensoRobot::ParseRecvParameter(
   double* pdbl;
   uint8_t* pbool;
 
-  if (recv->vt == (VT_ARRAY | VT_R8)) {
+    if (recv->vt == (VT_ARRAY | VT_R8)) {
     if (joints != recv->parray->rgsabound->cElements) {
+      std::cerr << "ERROR: ParseRecvParameter: " << joints << " , " << recv->parray->rgsabound->cElements << std::endl;
       return E_FAIL;
     }
 
@@ -1166,6 +1167,7 @@ HRESULT DensoRobot::ParseRecvParameter(
     SafeArrayUnaccessData(recv->parray);
   } else if (recv->vt == (VT_ARRAY | VT_VARIANT)) {
     if (num != recv->parray->rgsabound->cElements) {
+      std::cerr << "ERROR: ParseRecvParameter: (VARIANT)" << num << " , " << recv->parray->rgsabound->cElements <<std::endl;
       return E_FAIL;
     }
 
@@ -1177,6 +1179,8 @@ HRESULT DensoRobot::ParseRecvParameter(
     if (recv_ts) {
       if (pvnt[offset].vt != VT_I4) {
         hr = E_FAIL;
+        std::cerr << "ERROR:" <<  pvnt[offset].vt << " , " <<  VT_I4 << std::endl;
+
         goto exit_proc;
       }
 
@@ -1190,6 +1194,7 @@ HRESULT DensoRobot::ParseRecvParameter(
       if (
         (pvnt[offset].vt != (VT_ARRAY | VT_R8)) || (joints != pvnt[offset].parray->rgsabound->cElements))
       {
+        std::cerr << "ERROR2:" <<  pvnt[offset].vt << " , " <<  pvnt[offset].parray->rgsabound->cElements << std::endl;
         hr = E_FAIL;
         goto exit_proc;
       }
@@ -1265,6 +1270,7 @@ HRESULT DensoRobot::ParseRecvParameter(
     exit_proc:
     SafeArrayUnaccessData(recv->parray);
   } else {
+    std::cerr << "~~~~~~ Unknown error" << std::endl;
     return E_FAIL;
   }
 

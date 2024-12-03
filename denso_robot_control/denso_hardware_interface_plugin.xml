@@ -7,3 +7,12 @@
     </description>
   </class>
 </library>
+<library path="cobotta_hand_control_plugin">
+  <class name="denso_robot_control/CobottaHandHW"
+         type="denso_robot_control::CobottaHandHW"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+		ROS2 Control System Driver for the Cobotta hand.
+    </description>
+  </class>
+</library>

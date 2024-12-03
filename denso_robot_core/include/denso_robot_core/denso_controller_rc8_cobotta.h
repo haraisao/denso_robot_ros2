@@ -43,11 +43,15 @@ public:
   virtual HRESULT ExecResetStoState() override;
 
   static bool IsCobotta(const std::string& robot_name);
+  HRESULT HandMove(const double w);
 
 private:
   HRESULT AddRobot(XMLElement * xmlElem);
 
 };
+
+typedef std::shared_ptr<DensoControllerRC8Cobotta> DensoControllerRC8Cobotta_Ptr;
+
 }  // namespace denso_robot_core
 
 #endif  // DENSO_CONTROLLER_RC8_COBOTTA_H

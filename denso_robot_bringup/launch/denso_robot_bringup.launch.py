@@ -112,7 +112,7 @@ def generate_launch_description():
             description='Control frequency.'))
     declared_arguments.append(
         DeclareLaunchArgument(
-            'ip_address', default_value='192.168.0.1',
+            'ip_address', default_value='127.0.0.1',
             description='IP address by which the robot can be reached.'))
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -180,6 +180,7 @@ def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
 #    launch_rviz = LaunchConfiguration('launch_rviz')
     sim = LaunchConfiguration('sim')
+
     verbose = LaunchConfiguration('verbose')
     controllers_file = LaunchConfiguration('controllers_file')
     robot_controller = LaunchConfiguration('robot_controller')
@@ -247,18 +248,13 @@ def generate_launch_description():
         'moveit_controller_manager': 'moveit_simple_controller_manager'\
             + '/MoveItSimpleControllerManager',
     }
-    if sim:
-        moveit_controllers_file = PathJoinSubstitution(
-            [
-                FindPackageShare(moveit_config_package), 'robots',
-                denso_robot_model, 'config/moveit_controllers_gazebo.yaml'
-            ])
-    else:
-        moveit_controllers_file = PathJoinSubstitution(
-            [
-                FindPackageShare(moveit_config_package), 'robots',
-                denso_robot_model, 'config/moveit_controllers.yaml'
-            ])
+
+    moveit_controllers_file = PathJoinSubstitution(
+        [
+            FindPackageShare(moveit_config_package), 'robots',
+            denso_robot_model, 'config/moveit_controllers_gazebo.yaml'
+            #denso_robot_model, 'config/moveit_controllers.yaml'
+        ])
 
     trajectory_execution = {
         'moveit_manage_controllers': False,
@@ -331,7 +327,7 @@ def generate_launch_description():
             robot_description,
             robot_controllers,
             denso_robot_control_parameters,
-            robot_limits_file,
+            robot_limits_file,{'joint': 'cobotta_finger_joint1'}
         ],
         output={
             'stdout': 'screen',
@@ -355,11 +351,13 @@ def generate_launch_description():
         executable='spawner',
         arguments=[robot_controller, '-c', '/controller_manager'])
 
-    if sim:
-        hand_controller_spawner = Node(
-            package='controller_manager',
-            executable='spawner',
-            arguments=['denso_hand_controller', '--controller-manager', '/controller_manager'])
+    hand_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        #condition=IfCondition(sim),
+        parameters=[{'joint': 'cobotta_finger_joint1'}],
+        arguments=['denso_hand_controller', '--controller-manager', '/controller_manager',
+                '-t', 'position_controllers/GripperActionController'])
 
 # TODO: do we need the Warehouse mongodb server ?
 # (always / never / only in simulation with Gazebo ...)
@@ -418,31 +416,18 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description', '-entity', denso_robot_model],
         output='screen')
 
-    if sim:
-        nodes_to_start = [
-            control_node,
-            robot_controller_spawner,
-            hand_controller_spawner,
-            move_group_node,
-    #        mongodb_server_node,
-            rviz_node,
-            static_tf,
-            gazebo,
-            spawn_entity,
-            robot_state_publisher_node,
-            joint_state_broadcaster_spawner
-        ]
-    else:
-        nodes_to_start = [
-            control_node,
-            robot_controller_spawner,
-            move_group_node,
-    #        mongodb_server_node,
-            rviz_node,
-            static_tf,
-            gazebo,
-            spawn_entity,
-            robot_state_publisher_node,
-            joint_state_broadcaster_spawner
-        ]
+    nodes_to_start = [
+        control_node,
+        robot_controller_spawner,
+        hand_controller_spawner,
+        move_group_node,
+#        mongodb_server_node,
+        rviz_node,
+        static_tf,
+        gazebo,
+        spawn_entity,
+        robot_state_publisher_node,
+        joint_state_broadcaster_spawner
+    ]
+
     return LaunchDescription(declared_arguments + nodes_to_start)

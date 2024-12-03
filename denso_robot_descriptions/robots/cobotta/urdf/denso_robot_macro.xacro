@@ -72,10 +72,14 @@
     <xacro:denso_robot_arm_kinematics namespace="$(arg namespace)" model="$(arg model)" />
     
     <!-- For Simulation     -->
+    <xacro:include filename="$(find denso_robot_descriptions)/robots/$(arg model)/urdf/denso_robot_hand.ros2_control.xacro" />
     <xacro:if value="${sim}">
-      <xacro:include filename="$(find denso_robot_descriptions)/robots/$(arg model)/urdf/denso_robot_hand.ros2_control.xacro" />
       <xacro:cobotta_hand_ros2_control name="GazeboHandSystem" ros2_control_hardware_type="gazebo" />
     </xacro:if>
+
+    <xacro:unless value="${sim}">
+      <xacro:cobotta_hand_ros2_control name="CobottaHandSystem" ros2_control_hardware_type="cobotta" />
+    </xacro:unless>
 
     <gazebo>
       <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">

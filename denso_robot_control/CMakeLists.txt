@@ -86,6 +86,34 @@ ament_target_dependencies(
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+
+set(HAND_NAME  "cobotta_hand_control")
+add_library(
+  ${HAND_NAME}_plugin
+  SHARED
+  src/cobotta_hand_hw.cpp
+  src/${HAND_NAME}.cpp)
+
+target_link_libraries(
+  ${HAND_NAME}_plugin
+  ${bcap_service_LIBRARIES}
+  ${bcap_core_LIBRARIES}
+  ${denso_robot_core_LIBRARIES})
+
+target_include_directories(${HAND_NAME}_plugin
+  PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>"
+  ${hardware_interface_INCLUDE_DIRS}
+  ${denso_robot_core_INCLUDE_DIRS}
+  ${bcap_service_INCLUDE_DIRS})
+
+ament_target_dependencies(
+  ${HAND_NAME}_plugin
+  ${${HAND_NAME}_EXPORTED_TARGETS}
+  ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+
 pluginlib_export_plugin_description_file(hardware_interface denso_hardware_interface_plugin.xml)
 
 
@@ -97,6 +125,11 @@ install(
   TARGETS ${PROJECT_NAME}_plugin
   DESTINATION lib)
 
+install(
+  TARGETS ${HAND_NAME}_plugin
+  DESTINATION lib)
+
+    
 install(
   DIRECTORY include/
   DESTINATION include)

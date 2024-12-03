@@ -7,31 +7,73 @@
                 <xacro:if value="${ros2_control_hardware_type == 'gazebo'}">
                     <plugin>gazebo_ros2_control/GazeboSystem</plugin>
                 </xacro:if>
+                <xacro:if value="${ros2_control_hardware_type == 'cobotta'}">
+                    <plugin>denso_robot_control/CobottaHandHW</plugin>
+                    <param name="robot_name">CVR038A1</param>
+                    <param name="ip_address">127.0.0.1</param>
+                    <param name="node_name">denso_hand_controller</param>
+                    <param name="node_namespace">cobotta</param>
+                    <param name="joint">cobotta_finger_joint1</param>
+                    <param name="send_format">0</param>
+                    <param name="recv_format">2</param>
+                    <param name="verbose">true</param>
+                </xacro:if>
                 <xacro:if value="${ros2_control_hardware_type == 'isaac'}">
                     <plugin>topic_based_ros2_control/TopicBasedSystem</plugin>
                     <param name="joint_commands_topic">/isaac_joint_commands</param>
                     <param name="joint_states_topic">/isaac_joint_states</param>
                 </xacro:if>
             </hardware>
-            <joint name="cobotta_finger_joint1">
-                <command_interface name="position" />
-                <state_interface name="position">
-                  <param name="initial_value">0.0</param>
-                </state_interface>
-                <state_interface name="velocity">
+            <xacro:if value="${ros2_control_hardware_type == 'gazebo'}">
+                <joint name="cobotta_finger_joint1">
+                    <command_interface name="position" />
+                    <state_interface name="position">
                     <param name="initial_value">0.0</param>
-                </state_interface>
-            </joint>
-            <joint name="cobotta_finger_joint2">
-                <param name="mimic">cobotta_finger_joint1</param>
-                <param name="multiplier">-1</param>
-                <state_interface name="position">
-                  <param name="initial_value">0.0</param>
-                </state_interface>
-                <state_interface name="velocity">
+                    </state_interface>
+                    <state_interface name="velocity">
+                        <param name="initial_value">0.0</param>
+                    </state_interface>
+                </joint>
+                
+                <joint name="cobotta_finger_joint2">
+                    <param name="mimic">cobotta_finger_joint1</param>
+                    <param name="multiplier">-1</param>
+                    <state_interface name="position">
                     <param name="initial_value">0.0</param>
-                </state_interface>
-            </joint>
+                    </state_interface>
+                    <state_interface name="velocity">
+                        <param name="initial_value">0.0</param>
+                    </state_interface>
+                </joint>
+            </xacro:if>
+
+            <xacro:if value="${ros2_control_hardware_type == 'cobotta'}">
+            <!--     -->
+                <joint name="cobotta_finger_joint1">
+                    <command_interface name="position" />
+                    <state_interface name="position">
+                    <param name="initial_value">0.015</param>
+                    </state_interface>
+            
+                    <state_interface name="velocity">
+                        <param name="initial_value">0.0</param>
+                    </state_interface>
+            
+                </joint>
+                <!--
+                <joint name="cobotta_finger_joint2">
+                    <param name="mimic">cobotta_finger_joint1</param>
+                    <param name="multiplier">-1</param>
+                    <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                    </state_interface>
+                    <state_interface name="velocity">
+                        <param name="initial_value">0.0</param>
+                    </state_interface>
+                </joint>
+                -->
+            </xacro:if>
+
         </ros2_control>
     </xacro:macro>
 

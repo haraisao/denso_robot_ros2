@@ -161,4 +161,58 @@ bool DensoControllerRC8Cobotta::IsCobotta(const std::string& robot_name)
   return false;
 }
 
+HRESULT DensoControllerRC8Cobotta::HandMove(const double w)
+{
+  int argc;
+  VARIANT_Vec vntArgs;
+  VARIANT *pvnt;
+  VARIANT_Ptr vntRet(new VARIANT());
+
+  for (argc = 0; argc < BCAP_CONTROLLER_EXECUTE_ARGS; argc++) {
+    VARIANT_Ptr vntTmp(new VARIANT());
+    VariantInit(vntTmp.get());
+    switch (argc) {
+      case 0:
+        vntTmp->vt = VT_I4;
+        vntTmp->ulVal = m_vecHandle[DensoBase::SRV_WATCH];
+        break;
+      case 1:
+        vntTmp->vt = VT_BSTR;
+        vntTmp->bstrVal = SysAllocString(L"HandMoveA");
+        break;
+      case 2:
+        vntTmp->vt = (VT_ARRAY | VT_VARIANT);
+        if (w < 0){
+          vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 2);
+          SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
+
+          pvnt[0].vt = VT_R8;
+          pvnt[0].dblVal = 30.0;
+
+          pvnt[1].vt = VT_UI1;
+          pvnt[1].bVal = 100;
+        }else{
+          vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 4);
+          SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
+
+          pvnt[0].vt = VT_R8;
+          pvnt[0].dblVal = w;
+
+          pvnt[1].vt = VT_UI1;
+          pvnt[1].bVal = 100;
+
+          pvnt[2].vt = VT_R8;
+          pvnt[2].dblVal = 20.0;
+
+          pvnt[3].vt = VT_BSTR;
+          pvnt[3].bstrVal = SysAllocString(L"Next");
+          SafeArrayUnaccessData(vntTmp->parray);
+        }
+        break;
+    }
+    vntArgs.push_back(*vntTmp.get());
+  }
+
+  return m_vecService[DensoBase::SRV_WATCH]->ExecFunction(ID_CONTROLLER_EXECUTE, vntArgs, vntRet);
+}
 }  // namespace denso_robot_core
