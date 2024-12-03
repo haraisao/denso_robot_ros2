@@ -43,6 +43,7 @@ public:
   virtual HRESULT ExecResetStoState() override;
 
   static bool IsCobotta(const std::string& robot_name);
+  
   HRESULT HandMove(const double w);
 
 private:

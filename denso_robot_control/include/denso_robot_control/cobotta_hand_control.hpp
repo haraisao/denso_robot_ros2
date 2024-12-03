@@ -91,24 +91,11 @@ public:
   }
 
   void set_hand_pos(double pos);
-  hardware_interface::return_type read(std::vector<double>& pos_interface);
-  hardware_interface::return_type write(std::vector<double>& cmd_interface, std::vector<double>& prev_cmd_interface,double dt);
   void Start();
   void Stop();
   void Update();
 
-  bool isSlaveSyncMode() const;
-
 private:
-
-  // Store the commands for the real robot
-  double cmd_[JOINT_MAX];
-  double pos_[JOINT_MAX];
-  double vel_[JOINT_MAX];
-  double eff_[JOINT_MAX];
-  int type_[JOINT_MAX];
-  std::vector<double> joint_;
-
   std::string node_name_;
   std::string node_namespace_;
   std::string robot_name_;
@@ -123,32 +110,9 @@ private:
   double limit_[JOINT_MAX];
   double cycle_sec_;
 
-  HRESULT ChangeModeWithClearError(int mode);
-
-  HRESULT CheckRobotType();
-
-  bool hasError();
-  void printErrorDescription(HRESULT error_code, const std::string& error_message);
-
-  DensoRobotCore_Ptr eng_;
   DensoControllerRC8Cobotta_Ptr ctrl_;
   DensoRobotRC8Cobotta_Ptr rob_;
   DensoVariable_Ptr var_err_;
-
-  rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_mini_io_;
-  rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_hand_io_;
-  rclcpp::Subscription<denso_robot_core_interfaces::msg::UserIO>::SharedPtr sub_send_user_io_;
-  rclcpp::Subscription<denso_robot_core_interfaces::msg::UserIO>::SharedPtr sub_recv_user_io_;
-
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr pub_cur_mode_;
-  rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_mini_io_;
-  rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_hand_io_;
-  rclcpp::Publisher<denso_robot_core_interfaces::msg::UserIO>::SharedPtr pub_recv_user_io_;
-  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr pub_current_;
-
-  rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_error_code_;
-  // ChangeMode Service
-  rclcpp::Service<denso_robot_core_interfaces::srv::ChangeMode>::SharedPtr change_mode_srv_;
 
   std::mutex mtx_mode_;
 
