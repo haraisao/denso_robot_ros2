@@ -51,7 +51,7 @@ namespace denso_robot_control
     arm_group_(arm_group), send_format_(send_format), recv_format_(recv_format), verbose_(verbose) 
     {
     memset(type_, 0, sizeof(type_));
-   // Initialize();
+    Initialize();
   }
 
   /**
@@ -88,13 +88,14 @@ namespace denso_robot_control
         rclcpp::get_logger(node_->get_name()),
         "***** DENSO cobotta robot name: %s", robot_name_.c_str());
     }
+
     eng_ = std::make_shared<DensoRobotCore>(node_, robot_ip_address_, robot_name_, ctrl_type_);
 
     if (verbose_) {
       RCLCPP_INFO(
         rclcpp::get_logger(node_->get_name()), "[DEBUG] Initializing b-cap engine ...");
     }
- 
+
     /**
       Initialize ORiN ports
      */
@@ -104,16 +105,22 @@ namespace denso_robot_control
         rclcpp::get_logger(node_->get_name()), "Failed to connect real controller. (%X)", hr);
       return hr;
     }
-
+ #if 1
     if (verbose_) {
       RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Adding hand controller ...");
     }
-    double ctrl_cycle_msec = 0.8;
+    double ctrl_cycle_msec = 8;
     int m_mode = 0;
+    std::string filename;
+    node_->get_parameter("denso_config_file", filename);
+    std::cerr << "======= denso_config_file: " << filename << std::endl;
     //ctrl_ = eng_->get_Controller();
     ctrl_ = std::make_shared<DensoControllerRC8Cobotta>(
           node_, robot_name_, &m_mode, robot_ip_address_,
           rclcpp::Duration(std::chrono::duration<double>(ctrl_cycle_msec / 1000.0)));
+    HRESULT res = ctrl_->InitializeBCAP(filename);
+    std::cerr << "======= InitializeBCAP: " << res << std::endl;
+#endif
 #if 0
     if (verbose_) {
       RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Adding robot arm ...");
@@ -155,6 +162,7 @@ namespace denso_robot_control
     //pub_cur_mode_ = node_->create_publisher<std_msgs::msg::Int32>("CurMode", 1);
     //pub_error_code_ = node_->create_publisher<std_msgs::msg::UInt32>("ErrorCode", 1);
 #endif
+    RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "==========> Initialized COBOTTA hand");
     return S_OK;
   }
 

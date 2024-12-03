@@ -167,19 +167,23 @@ HRESULT DensoControllerRC8Cobotta::HandMove(const double w)
   VARIANT_Vec vntArgs;
   VARIANT *pvnt;
   VARIANT_Ptr vntRet(new VARIANT());
-
+  std::cerr << "====================" << DensoBase::SRV_WATCH << std::endl;
   for (argc = 0; argc < BCAP_CONTROLLER_EXECUTE_ARGS; argc++) {
     VARIANT_Ptr vntTmp(new VARIANT());
     VariantInit(vntTmp.get());
+
     switch (argc) {
+#if 1
       case 0:
         vntTmp->vt = VT_I4;
         vntTmp->ulVal = m_vecHandle[DensoBase::SRV_WATCH];
         break;
+
       case 1:
         vntTmp->vt = VT_BSTR;
         vntTmp->bstrVal = SysAllocString(L"HandMoveA");
         break;
+
       case 2:
         vntTmp->vt = (VT_ARRAY | VT_VARIANT);
         if (w < 0){
@@ -208,11 +212,18 @@ HRESULT DensoControllerRC8Cobotta::HandMove(const double w)
           pvnt[3].bstrVal = SysAllocString(L"Next");
           SafeArrayUnaccessData(vntTmp->parray);
         }
-        break;
-    }
-    vntArgs.push_back(*vntTmp.get());
-  }
 
+        break;
+#endif
+    }
+
+    vntArgs.push_back(*vntTmp.get());
+
+  }
+#if 1
   return m_vecService[DensoBase::SRV_WATCH]->ExecFunction(ID_CONTROLLER_EXECUTE, vntArgs, vntRet);
+#else
+  return S_OK;
+#endif
 }
 }  // namespace denso_robot_core
