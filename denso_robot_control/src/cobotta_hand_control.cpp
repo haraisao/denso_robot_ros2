@@ -76,11 +76,18 @@ namespace denso_robot_control
     if(!node_->get_parameter("denso_config_file", filename)) {
       return E_FAIL;
     }
+    node_->declare_parameter("hand_speed", 100);
+    hand_speed_ = node_->get_parameter("hand_speed").as_int();
+    node_->declare_parameter("hand_force", 20.0);
+    hand_force_ = node_->get_parameter("hand_force").as_double();
+
     //node_->declare_parameter("bcap_slave_control_cycle_sec", 0.008);
     //cycle_sec_ = node_->get_parameter("bcap_slave_control_cycle_sec").as_double();
 
     sub_mode_  =  node_->create_subscription<std_msgs::msg::UInt32>("CurMode", 1,
           std::bind(&CobottaHandControl::CallbackCurMode, this, std::placeholders::_1));
+    sub_hand_move_  =  node_->create_subscription<std_msgs::msg::UInt32>("HandMove", 1,
+          std::bind(&CobottaHandControl::CallbackHandMove, this, std::placeholders::_1));
 
     if (verbose_) {
       RCLCPP_INFO(
@@ -116,15 +123,22 @@ namespace denso_robot_control
   CobottaHandControl::set_hand_pos(double pos) {
     if(m_mode == 0) { return; }
     double hand_w = pos*2000;
-    ctrl_->HandMove(hand_w);
+    ctrl_->HandMove(hand_w, hand_speed_);
     RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** Hand pos ... %f", hand_w);
     return;
   }
-
+  /**
+   */
   void
   CobottaHandControl::CallbackCurMode(const std_msgs::msg::UInt32::SharedPtr msg) {
     m_mode = msg->data;
-  }  
+  }
+  /**
+   */
+  void
+  CobottaHandControl::CallbackHandMove(const std_msgs::msg::UInt32::SharedPtr msg) {
+    ctrl_->HandMoveAH((double)msg->data, hand_speed_, hand_force_);
+  } 
 
   /**
    */

@@ -44,7 +44,8 @@ public:
 
   static bool IsCobotta(const std::string& robot_name);
   
-  HRESULT HandMove(const double w);
+  HRESULT HandMove(double w, int sp=100);
+  HRESULT HandMoveAH(double w, int sp=100, double eff=20.0);
 
 private:
   HRESULT AddRobot(XMLElement * xmlElem);

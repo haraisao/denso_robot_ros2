@@ -91,6 +91,7 @@ public:
   }
 
   void CallbackCurMode(const std_msgs::msg::UInt32::SharedPtr msg);
+  void CallbackHandMove(const std_msgs::msg::UInt32::SharedPtr msg);
 
   void set_hand_pos(double pos);
   void Start();
@@ -112,8 +113,12 @@ private:
   bool verbose_;
   rclcpp::Time start_time_, prev_time_;
   double cycle_sec_;
+  
+  int hand_speed_;
+  int hand_force_;
 
   rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_mode_;
+  rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_hand_move_;
     
   DensoControllerRC8Cobotta_Ptr ctrl_;
   DensoRobotRC8Cobotta_Ptr rob_;

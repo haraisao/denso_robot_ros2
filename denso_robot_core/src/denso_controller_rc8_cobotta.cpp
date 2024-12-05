@@ -161,12 +161,15 @@ bool DensoControllerRC8Cobotta::IsCobotta(const std::string& robot_name)
   return false;
 }
 
-HRESULT DensoControllerRC8Cobotta::HandMove(const double w)
+HRESULT DensoControllerRC8Cobotta::HandMove(double w, int sp)
 {
   int argc;
   VARIANT_Vec vntArgs;
   VARIANT *pvnt;
   VARIANT_Ptr vntRet(new VARIANT());
+  if (w < 0){ w=0.0;}
+  if (w > 30.0){ w=30.0;}
+
   for (argc = 0; argc < BCAP_CONTROLLER_EXECUTE_ARGS; argc++) {
     VARIANT_Ptr vntTmp(new VARIANT());
     VariantInit(vntTmp.get());
@@ -184,36 +187,72 @@ HRESULT DensoControllerRC8Cobotta::HandMove(const double w)
 
       case 2:
         vntTmp->vt = (VT_ARRAY | VT_VARIANT);
-        if (w < 0) {
-          vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 2);
-          SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
+        vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 3);
+        SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
 
-          pvnt[0].vt = VT_R8;
-          pvnt[0].dblVal = 30.0;
+        pvnt[0].vt = VT_R8;
+        pvnt[0].dblVal = w;
 
-          pvnt[1].vt = VT_UI1;
-          pvnt[1].bVal = 100;
-        } else {
-          vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 3);
-          SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
+        pvnt[1].vt = VT_UI1;
+        pvnt[1].bVal = sp;
 
-          pvnt[0].vt = VT_R8;
-          pvnt[0].dblVal = w;
-
-          pvnt[1].vt = VT_UI1;
-          pvnt[1].bVal = 100;
-
-          //pvnt[2].vt = VT_R8;
-          //pvnt[2].dblVal = 20.0;
-
-          pvnt[2].vt = VT_BSTR;
-          pvnt[2].bstrVal = SysAllocString(L"Next");
-          SafeArrayUnaccessData(vntTmp->parray);
-        }
+        pvnt[2].vt = VT_BSTR;
+        pvnt[2].bstrVal = SysAllocString(L"Next");
+        SafeArrayUnaccessData(vntTmp->parray);
         break;
     }
     vntArgs.push_back(*vntTmp.get());
   }
   return m_vecService[DensoBase::SRV_WATCH]->ExecFunction(ID_CONTROLLER_EXECUTE, vntArgs, vntRet);
 }
+
+HRESULT DensoControllerRC8Cobotta::HandMoveAH(double w, int sp, double eff)
+{
+  int argc;
+  VARIANT_Vec vntArgs;
+  VARIANT *pvnt;
+  VARIANT_Ptr vntRet(new VARIANT());
+
+  if (w < 0){ w=0.0;}
+  if (w > 30.0){ w=30.0;}
+
+  for (argc = 0; argc < BCAP_CONTROLLER_EXECUTE_ARGS; argc++) {
+    VARIANT_Ptr vntTmp(new VARIANT());
+    VariantInit(vntTmp.get());
+
+    switch (argc) {
+      case 0:
+        vntTmp->vt = VT_I4;
+        vntTmp->ulVal = m_vecHandle[DensoBase::SRV_WATCH];
+        break;
+
+      case 1:
+        vntTmp->vt = VT_BSTR;
+        vntTmp->bstrVal = SysAllocString(L"HandMoveAH");
+        break;
+
+      case 2:
+        vntTmp->vt = (VT_ARRAY | VT_VARIANT);
+        vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 3);
+        SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
+
+        pvnt[0].vt = VT_R8;
+        pvnt[0].dblVal = w;
+
+        pvnt[1].vt = VT_UI1;
+        pvnt[1].bVal = sp;
+
+        pvnt[2].vt = VT_R8;
+        pvnt[2].dblVal = eff;
+
+        pvnt[3].vt = VT_BSTR;
+        pvnt[3].bstrVal = SysAllocString(L"Next");
+        SafeArrayUnaccessData(vntTmp->parray);
+        break;
+    }
+    vntArgs.push_back(*vntTmp.get());
+  }
+  return m_vecService[DensoBase::SRV_WATCH]->ExecFunction(ID_CONTROLLER_EXECUTE, vntArgs, vntRet);
+}
+
 }  // namespace denso_robot_core
