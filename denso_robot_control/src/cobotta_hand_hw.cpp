@@ -37,7 +37,7 @@ CobottaHandHW::on_init(const hardware_interface::HardwareInfo & info) {
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** Start Hardware configuration 2");
   info_ = info;
 
-  hw_joint_state_ = 0.015;
+  hw_joint_state_ = 0.0;
   hw_joint_velocity_ = 0;
   hw_joint_command_ = 0;
   hw_joint_vel_command_ = 0;
@@ -165,7 +165,7 @@ CobottaHandHW::on_activate(const rclcpp_lifecycle::State & previous_state) {
   auto node = rclcpp::Node::make_shared(node_name, node_namespace);
   drobo_->setNode(node);
 
-  //SpinNode(node, drobo_);
+  SpinNode(node, drobo_);
 #endif
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "System successfully started !!");
   return CallbackReturn::SUCCESS;
@@ -231,7 +231,7 @@ CobottaHandHW::write(const rclcpp::Time & /* time */, const rclcpp::Duration & p
 void
 CobottaHandHW::SpinNode(rclcpp::Node::SharedPtr& node, CobottaHandControl_Ptr drobo) {
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** Starting DENSO robot control thread ...");
-#if 0
+#if 1
     std::thread denso_thread([node, drobo]() {
     rclcpp::WallRate loop_rate(1000);
     while (rclcpp::ok()) {

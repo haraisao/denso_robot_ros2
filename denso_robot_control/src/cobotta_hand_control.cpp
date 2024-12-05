@@ -50,6 +50,7 @@ namespace denso_robot_control
     robot_ip_address_(robot_ip_address), ctrl_type_(ctrl_type), 
     arm_group_(arm_group), send_format_(send_format), recv_format_(recv_format), verbose_(verbose) 
     {
+      m_mode=0;
     Initialize();
   }
 
@@ -78,6 +79,9 @@ namespace denso_robot_control
     //node_->declare_parameter("bcap_slave_control_cycle_sec", 0.008);
     //cycle_sec_ = node_->get_parameter("bcap_slave_control_cycle_sec").as_double();
 
+    sub_mode_  =  node_->create_subscription<std_msgs::msg::UInt32>("CurMode", 1,
+          std::bind(&CobottaHandControl::CallbackCurMode, this, std::placeholders::_1));
+
     if (verbose_) {
       RCLCPP_INFO(
         rclcpp::get_logger(node_->get_name()),
@@ -94,7 +98,6 @@ namespace denso_robot_control
       RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Adding hand controller ...");
     }
 
-    int m_mode = 0;
     ctrl_ = std::make_shared<DensoControllerRC8Cobotta>(
           node_, robot_name_, &m_mode, robot_ip_address_,
           rclcpp::Duration(std::chrono::duration<double>(0.008)));
@@ -111,17 +114,23 @@ namespace denso_robot_control
    */
   void
   CobottaHandControl::set_hand_pos(double pos) {
+    if(m_mode == 0) { return; }
     double hand_w = pos*2000;
     ctrl_->HandMove(hand_w);
     RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** Hand pos ... %f", hand_w);
     return;
   }
 
+  void
+  CobottaHandControl::CallbackCurMode(const std_msgs::msg::UInt32::SharedPtr msg) {
+    m_mode = msg->data;
+  }  
+
   /**
    */
   void
   CobottaHandControl::Update() {
-    //ctrl_->Update();
+    ctrl_->Update();
   }
   
   /**

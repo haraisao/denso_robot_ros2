@@ -194,7 +194,7 @@ HRESULT DensoControllerRC8Cobotta::HandMove(const double w)
           pvnt[1].vt = VT_UI1;
           pvnt[1].bVal = 100;
         } else {
-          vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 4);
+          vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 3);
           SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
 
           pvnt[0].vt = VT_R8;
@@ -203,11 +203,11 @@ HRESULT DensoControllerRC8Cobotta::HandMove(const double w)
           pvnt[1].vt = VT_UI1;
           pvnt[1].bVal = 100;
 
-          pvnt[2].vt = VT_R8;
-          pvnt[2].dblVal = 20.0;
+          //pvnt[2].vt = VT_R8;
+          //pvnt[2].dblVal = 20.0;
 
-          pvnt[3].vt = VT_BSTR;
-          pvnt[3].bstrVal = SysAllocString(L"Next");
+          pvnt[2].vt = VT_BSTR;
+          pvnt[2].bstrVal = SysAllocString(L"Next");
           SafeArrayUnaccessData(vntTmp->parray);
         }
         break;

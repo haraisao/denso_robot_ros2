@@ -90,10 +90,14 @@ public:
     node_ = node;
   }
 
+  void CallbackCurMode(const std_msgs::msg::UInt32::SharedPtr msg);
+
   void set_hand_pos(double pos);
   void Start();
   void Stop();
   void Update();
+
+  int m_mode;
 
 private:
   std::string node_name_;
@@ -107,9 +111,10 @@ private:
   int recv_format_;
   bool verbose_;
   rclcpp::Time start_time_, prev_time_;
-  double limit_[JOINT_MAX];
   double cycle_sec_;
 
+  rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_mode_;
+    
   DensoControllerRC8Cobotta_Ptr ctrl_;
   DensoRobotRC8Cobotta_Ptr rob_;
   DensoVariable_Ptr var_err_;
