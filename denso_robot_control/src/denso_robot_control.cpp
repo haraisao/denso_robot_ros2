@@ -320,6 +320,11 @@ namespace denso_robot_control
       RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Changed to slave mode ...");
     }
 
+    if (send_format_ == 0) {
+        sub_cobotta_hand_move_ = node_->create_subscription<std_msgs::msg::UInt32>(
+          "HandMoveA", 1,
+          std::bind(&DensoRobotControl::Callback_HandMoveA, this, std::placeholders::_1));
+    }
     return S_OK;
   }
 
@@ -444,6 +449,18 @@ namespace denso_robot_control
   {
     rob_->put_HandIO(msg->data);
   }
+
+  void DensoRobotControl::Callback_HandMoveA(const std_msgs::msg::UInt32::SharedPtr msg)
+  {
+    if (std::shared_ptr<DensoControllerRC8Cobotta> result = std::dynamic_pointer_cast<DensoControllerRC8Cobotta>(ctrl_)) {
+      result->HandMove((double)msg->data);
+    }
+    else {
+      RCLCPP_ERROR(
+        rclcpp::get_logger(node_->get_name()), "Error in HandMoveA, fail to convert control object");
+    }
+  }
+
 
   void DensoRobotControl::Callback_SendUserIO(const denso_robot_core_interfaces::msg::UserIO::SharedPtr msg)
   {

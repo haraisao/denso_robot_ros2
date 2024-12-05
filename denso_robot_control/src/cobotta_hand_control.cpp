@@ -86,8 +86,10 @@ namespace denso_robot_control
 
     sub_mode_  =  node_->create_subscription<std_msgs::msg::UInt32>("CurMode", 1,
           std::bind(&CobottaHandControl::CallbackCurMode, this, std::placeholders::_1));
-    sub_hand_move_  =  node_->create_subscription<std_msgs::msg::UInt32>("HandMove", 1,
+    sub_hand_move_  =  node_->create_subscription<std_msgs::msg::UInt32>("HandMoveAH", 1,
           std::bind(&CobottaHandControl::CallbackHandMove, this, std::placeholders::_1));
+
+    pub_hand_move_ = node_->create_publisher<std_msgs::msg::UInt32>("HandMoveA", 1);
 
     if (verbose_) {
       RCLCPP_INFO(
@@ -121,9 +123,12 @@ namespace denso_robot_control
    */
   void
   CobottaHandControl::set_hand_pos(double pos) {
-    if(m_mode == 0) { return; }
+    //if(m_mode == 0) { return; }
     double hand_w = pos*2000;
-    ctrl_->HandMove(hand_w, hand_speed_);
+    //ctrl_->HandMove(hand_w, hand_speed_);
+    std_msgs::msg::UInt32 msg;
+    msg.data = (uint32_t)hand_w;
+    pub_hand_move_->publish(msg);
     RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** Hand pos ... %f", hand_w);
     return;
   }

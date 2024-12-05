@@ -119,6 +119,7 @@ private:
 
   rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_mode_;
   rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_hand_move_;
+  rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_hand_move_;
     
   DensoControllerRC8Cobotta_Ptr ctrl_;
   DensoRobotRC8Cobotta_Ptr rob_;

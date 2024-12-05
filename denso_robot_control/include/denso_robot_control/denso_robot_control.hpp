@@ -47,6 +47,7 @@
 // DENSO libraries
 #include "denso_robot_core/denso_robot_core.h"
 #include "denso_robot_core/denso_controller.h"
+#include "denso_robot_core/denso_controller_rc8_cobotta.h"
 #include "denso_robot_core/denso_robot.h"
 #include "denso_robot_core/denso_variable.h"
 #include "denso_robot_core_interfaces/msg/user_io.hpp"
@@ -135,6 +136,7 @@ private:
 
   void Callback_MiniIO(const std_msgs::msg::UInt32::SharedPtr msg);
   void Callback_HandIO(const std_msgs::msg::UInt32::SharedPtr msg);
+  void Callback_HandMoveA(const std_msgs::msg::UInt32::SharedPtr msg);
   void Callback_SendUserIO(const denso_robot_core_interfaces::msg::UserIO::SharedPtr msg);
   void Callback_RecvUserIO(const denso_robot_core_interfaces::msg::UserIO::SharedPtr msg);
 
@@ -152,12 +154,14 @@ private:
 
   rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_mini_io_;
   rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_hand_io_;
+  rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr sub_cobotta_hand_move_;
   rclcpp::Subscription<denso_robot_core_interfaces::msg::UserIO>::SharedPtr sub_send_user_io_;
   rclcpp::Subscription<denso_robot_core_interfaces::msg::UserIO>::SharedPtr sub_recv_user_io_;
 
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr pub_cur_mode_;
   rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_mini_io_;
   rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_hand_io_;
+    
   rclcpp::Publisher<denso_robot_core_interfaces::msg::UserIO>::SharedPtr pub_recv_user_io_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr pub_current_;
 
