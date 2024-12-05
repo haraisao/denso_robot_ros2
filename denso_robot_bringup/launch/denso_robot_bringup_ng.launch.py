@@ -351,21 +351,6 @@ def generate_launch_description():
         executable='spawner',
         arguments=[robot_controller, '-c', '/controller_manager'])
 
-# TODO: do we need the Warehouse mongodb server ?
-# (always / never / only in simulation with Gazebo ...)
-    # Warehouse mongodb server
-
-#    mongodb_server_node = Node(
-#        package='warehouse_ros_mongo',
-#        executable='mongo_wrapper_ros.py',
-#        parameters=[
-#            {'warehouse_port': 33829},
-#            {'warehouse_host': 'localhost'},
-#            {'warehouse_plugin': 'warehouse_ros_mongo::MongoDatabaseConnection'}
-#        ],
-#        output='screen',
-#    )
-
 # --------- rviz with moveit configuration ---------
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), 'rviz', 'view_robot.rviz'])
@@ -396,17 +381,43 @@ def generate_launch_description():
         ])
 
 # --------- Gazebo Nodes (only if 'sim:=true') ---------
-    gazebo = ExecuteProcess(
-        condition=IfCondition(sim),
-        cmd=['gazebo', '--verbose', 'worlds/empty.world', '-s', 'libgazebo_ros_factory.so'],
-        output='screen')
+    set_param_use_sim_time = SetParameter(
+            name='use_sim_time', value=True,
+            condition=IfCondition(sim))
 
-    spawn_entity = Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
+    # Sets Paths for ignition#
+    env = {'IGN_GAZEBO_SYSTEM_PLUGIN_PATH': os.environ['LD_LIBRARY_PATH'],
+            #'IGN_GAZEBO_RESOURCE_PATH': os.path.dirname(get_package_share_directory('denso_robot_descriptions')) + ':' +
+            #os.path.dirname(get_package_share_directory(str(LaunchConfiguration('description_package').perform(context))))
+        }
+
+    ign_gazebo = ExecuteProcess(
+            condition=IfCondition(sim),
+            cmd=['ign gazebo -r', 'empty.sdf'],
+            output='screen',
+            additional_env=env,
+            shell=True
+    )
+
+    #print("===================",str(denso_robot_model.perform(LaunchContext())))
+    robot_name="cobotta"
+    ignition_spawn_entity_node = Node(
         condition=IfCondition(sim),
-        arguments=['-topic', 'robot_description', '-entity', denso_robot_model],
-        output='screen')
+        package='ros_gz_sim',
+        executable='create',
+        output='screen',
+        arguments=['-topic', '/robot_description',
+                    '-name', robot_name,
+                    '-allow_renaming', 'true'],
+    )
+
+    bridge = Node(
+        condition=IfCondition(sim),
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=['/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock'],
+        output='screen'
+    )
         
     nodes_to_start = [
         set_param_use_sim_time,
@@ -415,7 +426,6 @@ def generate_launch_description():
         control_node,
         robot_controller_spawner,
         move_group_node,
-#        mongodb_server_node,
         rviz_node,
         static_tf,
         robot_state_publisher_node,
