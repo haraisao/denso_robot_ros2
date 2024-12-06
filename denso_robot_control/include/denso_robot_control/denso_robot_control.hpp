@@ -128,7 +128,8 @@ private:
   double limit_[JOINT_MAX];
   double cycle_sec_;
 
-
+  int hand_speed_;
+  int hand_force_;
 
   HRESULT ChangeModeWithClearError(int mode);
 

@@ -150,6 +150,10 @@ namespace denso_robot_control
       limit_[i] = node_->get_parameter(name).as_double() * cycle_sec_;
     }
 
+    node_->declare_parameter("hand_speed", 100);
+    hand_speed_ = node_->get_parameter("hand_speed").as_int();
+    node_->declare_parameter("hand_force", 20.0);
+    hand_force_ = node_->get_parameter("hand_force").as_double();
 
 
     joint_.resize(robot_joints_);
@@ -307,7 +311,6 @@ namespace denso_robot_control
     action_client_ = rclcpp_action::create_client<control_msgs::action::FollowJointTrajectory>(node_,
           "/denso_joint_trajectory_controller/follow_joint_trajectory");
 
-
     if (verbose_) {
       RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Changing to slave mode ...");
     }
@@ -453,7 +456,7 @@ namespace denso_robot_control
   void DensoRobotControl::Callback_HandMoveA(const std_msgs::msg::UInt32::SharedPtr msg)
   {
     if (std::shared_ptr<DensoControllerRC8Cobotta> result = std::dynamic_pointer_cast<DensoControllerRC8Cobotta>(ctrl_)) {
-      result->HandMove((double)msg->data);
+      result->HandMove((double)msg->data, hand_speed_);
     }
     else {
       RCLCPP_ERROR(
