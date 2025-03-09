@@ -552,10 +552,10 @@ namespace denso_robot_control
 #if 1
     double v = pos - prev_pos;
     if (v < -limit) {
-      std::cerr << "Under limit:(" << i<< "):" << -limit << ":" << v << std::endl;
+      //std::cerr << "Under limit:(" << i<< "):" << -limit << ":" << v << std::endl;
       return prev_pos - limit;
     }else if(v > limit){
-      std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
+      //std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
       return prev_pos + limit;
     }
     return pos;
@@ -577,24 +577,10 @@ namespace denso_robot_control
       std::vector<double> pose;
       pose.resize(JOINT_MAX);
       int bits = 0x0000;
-#if 0
-      rclcpp::Time cur = getTime();
-      double dt = cur.seconds() - prev_time_.seconds();
-      //std::cerr << ", " << dt << ", "  ; //<< std::endl;
-      prev_time_ = cur;
-#else
+
       double dt = duration;
-#endif
-#ifdef DEBUG
-      std::cerr << ", " << dt << ", "; // << std::endl;
-#endif
+
       for (int i = 0; i < robot_joints_; i++) {
-#ifdef DEBUG
-      if(cmd_vel_interface[i] != 0){
-        std::cerr << cmd_interface[i] << ", " ; // << limit_[i] << ", ";
-      }
-#endif
-        //cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
         cmd_[i] = adjust_target(cmd_interface[i], cmd_[i], limit_[i], dt, i);
         switch (type_[i]) {
           case 0:  // prismatic
@@ -610,9 +596,6 @@ namespace denso_robot_control
         }
         bits |= (1 << i);
       }
-#ifdef DEBUG
-      std::cerr << std::endl;
-#endif
       // TODO: what is the purpose of this "push_back" function call ?
       // why "0x400000 | bits" ?
       pose.push_back(0x400000 | bits);
@@ -639,6 +622,9 @@ namespace denso_robot_control
           rob_->get_RecvUserIO(msg);
           pub_recv_user_io_->publish(*msg);
         }
+      } else if (hr == E_TIMEOUT) {
+        RCLCPP_WARN(rclcpp::get_logger(node_->get_name()), "slvMove timeout!!");
+        return return_type::OK;
       } else if (FAILED(hr) && (hr != DensoRobot::E_BUF_FULL)) {
         int error_count = 0;
         
@@ -651,9 +637,6 @@ namespace denso_robot_control
         if (!hasError()) {
           return return_type::OK;
         }
-        RCLCPP_FATAL(
-          rclcpp::get_logger(node_->get_name()), "Automatically change to normal mode.");
-        ChangeModeWithClearError(DensoRobot::SLVMODE_NONE);
 
         hr = ctrl_->ExecGetCurErrorCount(error_count);
         if (SUCCEEDED(hr)) {
@@ -667,14 +650,19 @@ namespace denso_robot_control
             }
             RCLCPP_FATAL(
               rclcpp::get_logger(node_->get_name()), "  [%d] %s (%X)", i + 1, error_message.c_str(), error_code);
+            ctrl_->ExecClearError();
           }
         }
+        RCLCPP_FATAL(
+          rclcpp::get_logger(node_->get_name()), "Automatically change to normal mode.");
+        ChangeModeWithClearError(DensoRobot::SLVMODE_NONE);
+
         return return_type::ERROR;
       }
     } else {
       for (int i = 0; i < robot_joints_; i++) {
         cmd_interface[i] = pos_[i];
-        //cmd_[i] = pos_[i];
+        cmd_[i] = pos_[i];
       }
     }
     return return_type::OK;

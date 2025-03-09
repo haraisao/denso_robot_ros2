@@ -18,6 +18,7 @@
 		<joint name="$(arg namespace)joint_4"/>
 		<joint name="$(arg namespace)joint_5"/>
 		<joint name="$(arg namespace)joint_6"/>
+		<joint name="$(arg namespace)joint_tool"/>
 	  </group>
 
     <group name="${namespace}hand">

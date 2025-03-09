@@ -41,6 +41,8 @@ DensoController::DensoController(
     switch (srvs) {
       case DensoBase::SRV_ACT:
         service->put_Type("udp");
+        service->put_Retry(1);
+        service->put_Timeout(8);
         break;
       default:
         service->put_Type("tcp");

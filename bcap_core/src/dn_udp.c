@@ -106,13 +106,17 @@ udp_send(int sock, const char *buf, uint32_t len_buf, void *arg)
 
   flag |= opt->flag;
 
-  ret = sendto(sock, buf, len_send, flag, (struct sockaddr *) &opt->addr,
-      sizeof(struct sockaddr_in));
-  len_sended = ret;
+  len_sended = 0;
+  while (len_sended < len_send) {
+    ret = sendto(sock, buf+len_sended, len_send-len_sended, flag, (struct sockaddr *) &opt->addr,
+        sizeof(struct sockaddr_in));
 
-  if (ret < 0) {
-    ret = DNGetLastError();
-    return OSERR2HRESULT(ret);
+    if (ret == 0) { break; }
+    if (ret < 0) {
+      ret = DNGetLastError();
+      return OSERR2HRESULT(ret);
+    }
+    len_sended += ret;
   }
 
   if (len_send > len_sended) {

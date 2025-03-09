@@ -96,6 +96,11 @@ DensoRobotHW::on_init(
       return CallbackReturn::ERROR;
     }
   }
+  if (rttest_set_sched_priority(80, SCHED_FIFO)) {
+    perror("Couldn't set scheduling priorirty and policy");
+  }else{
+    RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "***** Set Priority !!");
+  }
 
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "***** Hardware configured !!");
   return CallbackReturn::SUCCESS;
@@ -247,7 +252,7 @@ DensoRobotHW::on_deactivate(const rclcpp_lifecycle::State & previous_state)
 hardware_interface::return_type DensoRobotHW::read(const rclcpp::Time & /* time */,
                                                    const rclcpp::Duration & /* period */)
 {
-  std::unique_lock<std::mutex> lock_mode(mtx_mode_);
+  //std::unique_lock<std::mutex> lock_mode(mtx_mode_);
   // read robot current position
 #if 0
   return drobo_->read(pos_interface_);
@@ -260,23 +265,10 @@ hardware_interface::return_type DensoRobotHW::read(const rclcpp::Time & /* time 
 hardware_interface::return_type DensoRobotHW::write(const rclcpp::Time & /* time */,
                                                     const rclcpp::Duration & period)
 {
-  std::unique_lock<std::mutex> lock_mode(mtx_mode_);
+  //std::unique_lock<std::mutex> lock_mode(mtx_mode_);
 #if 0
   return drobo_->write(cmd_interface_, period.seconds());
 #else
-/**
-  for (uint i = 0; i < cmd_interface_.size(); i++) {
-    cmd_vel_interface_[i] = (cmd_interface_[i] - prev_cmd_interface_[i]);
-    if(cmd_vel_interface_[i] < 0.000001 and cmd_vel_interface_[i] > -0.000001){
-      cmd_vel_interface_[i] = 0;
-    }
-    if (period.seconds() > 0.0001){
-      cmd_vel_interface_[i] /= period.seconds();
-    }else{
-      cmd_vel_interface_[i]=0;
-    }
-  }
-  */
   drobo_->write(cmd_interface_, prev_cmd_interface_, period.seconds());
   for (uint i = 0; i < cmd_interface_.size(); i++) {
     prev_cmd_interface_[i] = cmd_interface_[i];

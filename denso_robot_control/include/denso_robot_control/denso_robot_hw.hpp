@@ -27,6 +27,7 @@
 
 
 #include "denso_robot_control/denso_robot_control.hpp"
+#include <rttest/rttest.h>
 
 namespace denso_robot_control {
 

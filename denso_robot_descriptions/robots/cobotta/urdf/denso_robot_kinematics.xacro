@@ -271,5 +271,12 @@
 			<child link="random" />
 		</joint>
 		<link name="random"/>
+		<joint name="$(arg namespace)joint_tool" type="fixed">
+			<parent link="$(arg namespace)J6"/>
+			<child link="$(arg namespace)tool"/>
+			<origin rpy="0.000000 0.000000 0.000000" xyz="0.000 0.000 0.060"/>
+			<axis xyz="0.000000 0.000000 1.000000"/>
+		</joint>
+		<link name="$(arg namespace)tool" />
 	</xacro:macro>
 </robot>

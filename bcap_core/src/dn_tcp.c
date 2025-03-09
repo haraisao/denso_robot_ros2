@@ -335,13 +335,15 @@ tcp_send(int sock, const char *buf, uint32_t len_buf, void *arg)
   }
 
   len_send = (len_buf != 0) ? len_buf : strlen(buf);
-
-  ret = send(sock, buf, len_send, flag);
-  len_sended = ret;
-
-  if (ret < 0) {
-    ret = DNGetLastError();
-    return OSERR2HRESULT(ret);
+  len_sended = 0;
+  while(len_sended < len_send) {
+    ret = send(sock, buf+len_sended, len_send-len_sended, flag);
+    if (ret < 0) {
+      ret = DNGetLastError();
+      return OSERR2HRESULT(ret);
+    }
+    if (ret == 0) { break; }
+    len_sended += ret;
   }
 
   if (len_send > len_sended) {

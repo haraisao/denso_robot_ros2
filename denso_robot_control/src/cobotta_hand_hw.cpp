@@ -39,9 +39,9 @@ CobottaHandHW::on_init(const hardware_interface::HardwareInfo & info) {
 
   hw_joint_state_ = 0.015;
   hw_joint_velocity_ = 0;
-  hw_joint_command_ = 0;
+  hw_joint_command_ = 0.015;
   hw_joint_vel_command_ = 0;
-  current_state_ = 0.015;
+  current_state_ = 0.0;
 
   const hardware_interface::ComponentInfo & joint = info_.joints[0];
   // RRBotModularJoint has exactly one state and command interface on each joint
@@ -165,7 +165,7 @@ CobottaHandHW::on_activate(const rclcpp_lifecycle::State & previous_state) {
   auto node = rclcpp::Node::make_shared(node_name, node_namespace);
   drobo_->setNode(node);
 
-  SpinNode(node, drobo_);
+  //SpinNode(node, drobo_);
 
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "System successfully started !!");
   return CallbackReturn::SUCCESS;

@@ -28,6 +28,7 @@ set(
   bcap_core
   bcap_service
   bcap_service_interfaces
+  rttest
   denso_robot_core
   denso_robot_core_interfaces)
 
