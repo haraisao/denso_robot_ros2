@@ -16,7 +16,6 @@
 
 
 import os
-import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
@@ -32,18 +31,7 @@ from typing import Iterable
 from typing import Text
 from launch.some_substitutions_type import SomeSubstitutionsType
 
-
-""" Function for loading a yaml file. """
-
-
-def load_yaml(package_name, file_path):
-    package_path = get_package_share_directory(package_name)
-    absolute_file_path = os.path.join(package_path, file_path)
-    try:
-        with open(absolute_file_path) as file:
-            return yaml.safe_load(file)
-    except OSError:  # parent of IOError, OSError *and* WindowsError where available
-        return None
+from launch_param_builder import ParameterBuilder
 
 
 """ Substitution class for appending LaunchConfig parameters to a string.
@@ -100,11 +88,11 @@ def generate_launch_description():
     # choices=['cobotta', 'vs060', 'vs087']))
     declared_arguments.append(
         DeclareLaunchArgument(
-            'send_format', default_value='288',
+            'send_format', default_value='0',
             description='Data format for sending commands to the robot.'))
     declared_arguments.append(
         DeclareLaunchArgument(
-            'recv_format', default_value='292',
+            'recv_format', default_value='2',
             description='Data format for receiving robot status.'))
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -119,6 +107,7 @@ def generate_launch_description():
             'conn_type',
             default_value='tcp',
             description='Connection type used [udp/tcp].'))
+
 # Configuration arguments
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -154,12 +143,16 @@ def generate_launch_description():
             description='Robot controller to start.'))
 # Execution arguments (Rviz and Gazebo)
 # TODO: shall we give the user the choice not to load the rviz graphical environment ??
-#    declared_arguments.append(
-#        DeclareLaunchArgument('launch_rviz', default_value='true', description='Launch RViz?')
-#    )
+    declared_arguments.append(
+        DeclareLaunchArgument('launch_rviz', default_value='true', description='Launch RViz?')
+    )
     declared_arguments.append(
         DeclareLaunchArgument(
             'sim', default_value='true',
+            description='Start robot with fake hardware mirroring command to its states.'))
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'bcap_slave_mode', default_value='true',
             description='Start robot with fake hardware mirroring command to its states.'))
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -173,13 +166,16 @@ def generate_launch_description():
     send_format = LaunchConfiguration('send_format')
     recv_format = LaunchConfiguration('recv_format')
     bcap_slave_control_cycle_msec = LaunchConfiguration('bcap_slave_control_cycle_msec')
+
     description_package = LaunchConfiguration('description_package')
     description_file = LaunchConfiguration('description_file')
     moveit_config_package = LaunchConfiguration('moveit_config_package')
     moveit_config_file = LaunchConfiguration('moveit_config_file')
     namespace = LaunchConfiguration('namespace')
-#    launch_rviz = LaunchConfiguration('launch_rviz')
+    launch_rviz = LaunchConfiguration('launch_rviz')
+
     sim = LaunchConfiguration('sim')
+    bcap_slave = LaunchConfiguration('bcap_slave_mode')
 
     verbose = LaunchConfiguration('verbose')
     controllers_file = LaunchConfiguration('controllers_file')
@@ -189,10 +185,14 @@ def generate_launch_description():
 
     denso_robot_control_parameters = {
         'denso_bcap_slave_control_cycle_msec': bcap_slave_control_cycle_msec,
-        'denso_config_file': PathJoinSubstitution([denso_robot_core_pkg, 'config', 'config.xml'])}
+        'denso_config_file': PathJoinSubstitution([denso_robot_core_pkg, 'config', 'config.xml']),
+        'bcap_slave_mode': bcap_slave }
 
-    robot_description_content = Command(
-        [
+# --------- MoveIt Configuration ---------
+
+    robot_description = {
+        'robot_description':
+          Command([
             PathJoinSubstitution([FindExecutable(name='xacro')]), ' ',
             PathJoinSubstitution(
                 [FindPackageShare(description_package), 'urdf', description_file]),
@@ -205,34 +205,33 @@ def generate_launch_description():
             'namespace:=', namespace, ' ',
             'verbose:=', verbose, ' ',
             'sim:=', sim, ' '
-        ])
-    robot_description = {'robot_description': robot_description_content}
+          ])
+    }
 
-# --------- MoveIt Configuration ---------
+    robot_description_semantic = {
+        'robot_description_semantic': 
+           Command([
+              PathJoinSubstitution([FindExecutable(name='xacro')]), ' ',
+              PathJoinSubstitution([FindPackageShare(moveit_config_package), 'srdf', moveit_config_file]),
+              ' ',
+              'model:=', denso_robot_model, ' ',
+              'namespace:=', namespace, ' '
+           ])
+    }
 
-    robot_description_semantic_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name='xacro')]), ' ',
-            PathJoinSubstitution(
-                [FindPackageShare(moveit_config_package), 'srdf', moveit_config_file]),
-            ' ',
-            'model:=', denso_robot_model, ' ',
-            'namespace:=', namespace, ' '
-        ])
-    robot_description_semantic = {'robot_description_semantic': robot_description_semantic_content}
-    kinematics_yaml = load_yaml('denso_robot_moveit_config', 'config/kinematics.yaml')
-    robot_description_kinematics = {'robot_description_kinematics': kinematics_yaml}
+    robot_description_kinematics = {
+        'robot_description_kinematics':
+           ParameterBuilder('denso_robot_moveit_config').yaml(
+               "config/kinematics.yaml"
+           ).to_dict()
+    }
 
-    # Planning Configuration
+#----- Planning Configuration
     ompl_planning_pipeline_config = {
         'move_group': {
             'planning_plugin': 'ompl_interface/OMPLPlanner',
-            # 'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization \
-                # default_planner_request_adapters/FixWorkspaceBounds \
-                # default_planner_request_adapters/FixStartStateBounds \
-                # default_planner_request_adapters/FixStartStateCollision \
-                # default_planner_request_adapters/FixStartStatePathConstraints""",
-            'request_adapters': 'default_planner_request_adapters/AddTimeOptimalParameterization' \
+            'request_adapters': '' \
+                + 'default_planner_request_adapters/AddTimeOptimalParameterization' \
                 + ' default_planner_request_adapters/FixWorkspaceBounds' \
                 + ' default_planner_request_adapters/FixStartStateBounds' \
                 + ' default_planner_request_adapters/FixStartStateCollision' \
@@ -240,10 +239,25 @@ def generate_launch_description():
             'start_state_max_bounds_error': 0.1,
         }
     }
-    ompl_planning_yaml = load_yaml('denso_robot_moveit_config', 'config/ompl_planning.yaml')
+    ompl_planning_yaml = ParameterBuilder('denso_robot_moveit_config').yaml(
+               "config/ompl_planning.yaml"
+           ).to_dict()
     ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
 
-    # Trajectory Execution Configuration
+    ompl_bcap_planning_pipeline_config = {
+        'move_group': {
+            'planning_plugin': 'ompl_interface/OMPLPlanner',
+            'request_adapters': '' \
+                + ' default_planner_request_adapters/FixWorkspaceBounds' \
+                + ' default_planner_request_adapters/FixStartStateBounds' \
+                + ' default_planner_request_adapters/FixStartStateCollision' \
+                + ' default_planner_request_adapters/FixStartStatePathConstraints',
+            'start_state_max_bounds_error': 0.1,
+        }
+    }
+    ompl_bcap_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
+
+#----- Trajectory Execution Configuration
     moveit_controllers = {
         'moveit_controller_manager': 'moveit_simple_controller_manager'\
             + '/MoveItSimpleControllerManager',
@@ -258,7 +272,7 @@ def generate_launch_description():
 
     trajectory_execution = {
         'moveit_manage_controllers': False,
-        'trajectory_execution.allowed_execution_duration_scaling': 1.2,
+        'trajectory_execution.allowed_execution_duration_scaling': 1.0,
         'trajectory_execution.allowed_goal_duration_margin': 0.5,
         'trajectory_execution.allowed_start_tolerance': 0.01,
     }
@@ -287,17 +301,19 @@ def generate_launch_description():
             'sensor_plugin': '', #'~'
         },
     }
+
     robot_limits_file = PathJoinSubstitution(
         [
             FindPackageShare(moveit_config_package), 'robots',
             denso_robot_model, 'config/joint_limits.yaml'
         ])
 
-    # Start the actual move_group node/action server
+#------ Start the actual move_group node/action server
     move_group_node = Node(
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
+        condition=IfCondition(bcap_slave),
         parameters=[
             robot_description,
             robot_description_semantic,
@@ -312,12 +328,31 @@ def generate_launch_description():
             {'use_sim_time': sim}
         ])
 
-# --------- Robot Control Node (only if 'sim:=false') ---------
-    robot_controllers = PathJoinSubstitution(
-        [
-            FindPackageShare(moveit_config_package), 'robots',
-            denso_robot_model, 'config', controllers_file
+    move_group_bcap_node = Node(
+        package='moveit_ros_move_group',
+        executable='move_group',
+        output='screen',
+        condition=UnlessCondition(bcap_slave),
+        parameters=[
+            robot_description,
+            robot_description_semantic,
+            robot_description_kinematics,
+            robot_limits_file,
+            ompl_bcap_planning_pipeline_config,
+            trajectory_execution,
+            moveit_controllers,
+            moveit_controllers_file,
+            occupancy_map_monitor_parameters,
+            planning_scene_monitor_parameters,
+            {'use_sim_time': sim}
         ])
+
+# --------- Robot Control Node (only if 'sim:=false') ---------
+    #robot_controllers = PathJoinSubstitution(
+    #    [
+    #        FindPackageShare(moveit_config_package), 'robots',
+    #        denso_robot_model, 'config', controllers_file
+    #    ])
 
     control_node = Node(
         package='controller_manager',
@@ -325,15 +360,19 @@ def generate_launch_description():
         condition=UnlessCondition(sim),
         parameters=[
             robot_description,
-            robot_controllers,
+            PathJoinSubstitution([FindPackageShare(moveit_config_package), 'robots',
+                    denso_robot_model, 'config', controllers_file]),
+            #robot_controllers,
             denso_robot_control_parameters,
-            robot_limits_file,{'joint': 'cobotta_finger_joint1'}
+            robot_limits_file,
+            {'joint': 'cobotta_finger_joint1'}
         ],
         output={
             'stdout': 'screen',
             'stderr': 'screen',
         })
 
+    #----
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -346,15 +385,22 @@ def generate_launch_description():
         executable='spawner',
         arguments=['denso_joint_state_broadcaster', '--controller-manager', '/controller_manager'])
 
+    #---- Robot Controller
     robot_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
+        condition=IfCondition(bcap_slave),
         arguments=[robot_controller, '-c', '/controller_manager'])
+
+    bcap_robot_controller_node = Node(
+        package='bcap_controller',
+        executable='bcap_controller',
+        condition=UnlessCondition(bcap_slave),
+        arguments=[])
 
     hand_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        #condition=IfCondition(sim),
         parameters=[{'joint': 'cobotta_finger_joint1'}],
         arguments=['denso_hand_controller', '--controller-manager', '/controller_manager',
                 '-t', 'position_controllers/GripperActionController'])
@@ -380,7 +426,7 @@ def generate_launch_description():
 
     rviz_node = Node(
         package='rviz2',
-#        condition=IfCondition(launch_rviz),
+        condition=IfCondition(launch_rviz),
         executable='rviz2',
         name='rviz2_moveit',
         output='log',
@@ -388,7 +434,6 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_description_semantic,
-            ompl_planning_pipeline_config,
             robot_description_kinematics
         ])
 
@@ -416,11 +461,14 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description', '-entity', denso_robot_model],
         output='screen')
 
+# --------- Node List
     nodes_to_start = [
         control_node,
         robot_controller_spawner,
+        bcap_robot_controller_node,
         hand_controller_spawner,
         move_group_node,
+        move_group_bcap_node,
 #        mongodb_server_node,
         rviz_node,
         static_tf,

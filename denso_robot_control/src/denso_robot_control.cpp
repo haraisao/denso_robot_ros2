@@ -155,6 +155,13 @@ namespace denso_robot_control
     node_->declare_parameter("hand_force", 20.0);
     hand_force_ = node_->get_parameter("hand_force").as_double();
 
+    node_->declare_parameter("bcap_slave_mode", true);
+    bcap_slave_mode_ = node_->get_parameter("bcap_slave_mode").as_bool();
+    if (bcap_slave_mode_){
+        RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "====> Start with bCap slave mode ...");
+    }else{
+        RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "====> Start with normal mode ...");
+    }
 
     joint_.resize(robot_joints_);
     memset(cmd_, 0, sizeof(cmd_));
@@ -311,18 +318,28 @@ namespace denso_robot_control
     action_client_ = rclcpp_action::create_client<control_msgs::action::FollowJointTrajectory>(node_,
           "/denso_joint_trajectory_controller/follow_joint_trajectory");
 
-    if (verbose_) {
-      RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Changing to slave mode ...");
+    //------ Slave mode
+    if (bcap_slave_mode_){
+      if (verbose_) {
+        RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Changing to slave mode ...");
+      }
+#if 1
+      hr = ChangeModeWithClearError(DensoRobot::SLVMODE_SYNC_WAIT | DensoRobot::SLVMODE_POSE_J);  // (0x0200 | 0x0002)
+#else
+      hr = ChangeModeWithClearError(DensoRobot::SLVMODE_ASYNC | DensoRobot::SLVMODE_POSE_J);  // (0x0100 | 0x0002)
+#endif
+      if (FAILED(hr)) {
+        printErrorDescription(hr, "Failed to change to slave mode");
+        return hr;
+      }
+      if (verbose_) {
+        RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Changed to slave mode ...");
+      }
+    }else{
+        RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "******* Start with normal mode ...");
     }
-    hr = ChangeModeWithClearError(DensoRobot::SLVMODE_SYNC_WAIT | DensoRobot::SLVMODE_POSE_J);  // (0x0200 | 0x0002)
-    if (FAILED(hr)) {
-      printErrorDescription(hr, "Failed to change to slave mode");
-      return hr;
-    }
-    if (verbose_) {
-      RCLCPP_INFO(rclcpp::get_logger(node_->get_name()), "[DEBUG] Changed to slave mode ...");
-    }
-
+    //----
+    
     if (send_format_ == 0) {
         sub_cobotta_hand_move_ = node_->create_subscription<std_msgs::msg::UInt32>(
           "HandMoveA", 1,
@@ -477,7 +494,12 @@ namespace denso_robot_control
 
   bool DensoRobotControl::isSlaveSyncMode() const
   {
-    if (eng_->get_Mode() & DensoRobot::SLVMODE_SYNC_WAIT) {
+#if 1
+    if (eng_->get_Mode() & DensoRobot::SLVMODE_SYNC_WAIT) 
+#else
+    if (eng_->get_Mode() & DensoRobot::SLVMODE_ASYNC) 
+#endif
+    {
       return true;
     }
     return false;
@@ -552,10 +574,10 @@ namespace denso_robot_control
 #if 1
     double v = pos - prev_pos;
     if (v < -limit) {
-      //std::cerr << "Under limit:(" << i<< "):" << -limit << ":" << v << std::endl;
+      std::cerr << "Under limit:(" << i<< "):" << -limit << ":" << v << std::endl;
       return prev_pos - limit;
     }else if(v > limit){
-      //std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
+      std::cerr << "Over limit:(" << i << "):" << limit << ":" << v << std::endl;
       return prev_pos + limit;
     }
     return pos;
@@ -596,11 +618,14 @@ namespace denso_robot_control
         }
         bits |= (1 << i);
       }
+
       // TODO: what is the purpose of this "push_back" function call ?
       // why "0x400000 | bits" ?
       pose.push_back(0x400000 | bits);
 
       HRESULT hr = rob_->ExecSlaveMove(pose, joint_);
+      if (hr == E_TIMEOUT) { hr = rob_->ExecSlaveMove(pose, joint_); }
+
       if (SUCCEEDED(hr)) {
         if (recv_format_ & DensoRobot::RECVFMT_HANDIO) {
           std_msgs::msg::UInt32 msg;
@@ -625,9 +650,10 @@ namespace denso_robot_control
       } else if (hr == E_TIMEOUT) {
         RCLCPP_WARN(rclcpp::get_logger(node_->get_name()), "slvMove timeout!!");
         return return_type::OK;
+
       } else if (FAILED(hr) && (hr != DensoRobot::E_BUF_FULL)) {
         int error_count = 0;
-        
+
         std_msgs::msg::UInt32 msg;
         msg.data = hr;
         pub_error_code_->publish(msg);

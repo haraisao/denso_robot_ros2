@@ -130,6 +130,7 @@ private:
 
   int hand_speed_;
   int hand_force_;
+  bool bcap_slave_mode_;
 
   HRESULT ChangeModeWithClearError(int mode);
 
