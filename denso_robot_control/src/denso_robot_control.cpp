@@ -312,6 +312,10 @@ namespace denso_robot_control
       "ChangeMode",
       std::bind(&DensoRobotControl::ChangeModeFunction, this, std::placeholders::_1, std::placeholders::_2));
 
+    get_mode_srv_ = node_->create_service<denso_robot_core_interfaces::srv::GetMode>(
+      "GetMode",
+      std::bind(&DensoRobotControl::GetModeFunction, this, std::placeholders::_1, std::placeholders::_2));
+
     pub_cur_mode_ = node_->create_publisher<std_msgs::msg::Int32>("CurMode", 1);
     pub_error_code_ = node_->create_publisher<std_msgs::msg::UInt32>("ErrorCode", 1);
 
@@ -425,6 +429,15 @@ namespace denso_robot_control
     return true;
   }
 
+  bool DensoRobotControl::GetModeFunction(
+    const std::shared_ptr<denso_robot_core_interfaces::srv::GetMode::Request> request,
+    std::shared_ptr<denso_robot_core_interfaces::srv::GetMode::Response> response)
+  {
+    std::unique_lock<std::mutex> lock_mode(mtx_mode_);
+    response->mode = eng_->get_Mode();
+    return true;
+  }
+
   HRESULT DensoRobotControl::CheckRobotType()
   {
     DensoVariable_Ptr p_var;
@@ -472,8 +485,8 @@ namespace denso_robot_control
 
   void DensoRobotControl::Callback_HandMoveA(const std_msgs::msg::UInt32::SharedPtr msg)
   {
-    if (std::shared_ptr<DensoControllerRC8Cobotta> result = std::dynamic_pointer_cast<DensoControllerRC8Cobotta>(ctrl_)) {
-      result->HandMove((double)msg->data, hand_speed_);
+    if (std::shared_ptr<DensoControllerRC8Cobotta> cobotta_ = std::dynamic_pointer_cast<DensoControllerRC8Cobotta>(ctrl_)) {
+      cobotta_->HandMove((double)msg->data, hand_speed_);
     }
     else {
       RCLCPP_ERROR(

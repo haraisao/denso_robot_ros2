@@ -3,6 +3,7 @@ move_group:
     moveit_simple_controller_manager:
       controller_names:
         - denso_joint_trajectory_controller
+        - denso_hand_controller
 
       denso_joint_trajectory_controller:
         action_ns: follow_joint_trajectory
@@ -15,3 +16,10 @@ move_group:
           - joint_4
           - joint_5
           - joint_6
+
+      denso_hand_controller:
+        action_ns: gripper_cmd
+        type: GripperCommand
+        default: true
+        joints:
+          - cobotta_finger_joint1

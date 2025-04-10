@@ -170,40 +170,48 @@ HRESULT DensoControllerRC8Cobotta::HandMove(double w, int sp)
   if (w < 0){ w=0.0;}
   if (w > 30.0){ w=30.0;}
 
-  for (argc = 0; argc < BCAP_CONTROLLER_EXECUTE_ARGS; argc++) {
-    VARIANT_Ptr vntTmp(new VARIANT());
-    VariantInit(vntTmp.get());
+  HRESULT hr;
+  DensoRobotRC8Cobotta_Ptr pRob;
+  hr = get_Robot(DensoBase::SRV_WATCH, &pRob);
+  hr = pRob->ExecTakeArm();
+  if (SUCCEEDED(hr)) {
+    for (argc = 0; argc < BCAP_CONTROLLER_EXECUTE_ARGS; argc++) {
+      VARIANT_Ptr vntTmp(new VARIANT());
+      VariantInit(vntTmp.get());
 
-    switch (argc) {
-      case 0:
-        vntTmp->vt = VT_I4;
-        vntTmp->ulVal = m_vecHandle[DensoBase::SRV_WATCH];
-        break;
+      switch (argc) {
+        case 0:
+          vntTmp->vt = VT_I4;
+          vntTmp->ulVal = m_vecHandle[DensoBase::SRV_WATCH];
+          break;
 
-      case 1:
-        vntTmp->vt = VT_BSTR;
-        vntTmp->bstrVal = SysAllocString(L"HandMoveA");
-        break;
+        case 1:
+          vntTmp->vt = VT_BSTR;
+          vntTmp->bstrVal = SysAllocString(L"HandMoveA");
+          break;
 
-      case 2:
-        vntTmp->vt = (VT_ARRAY | VT_VARIANT);
-        vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 3);
-        SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
+        case 2:
+          vntTmp->vt = (VT_ARRAY | VT_VARIANT);
+          vntTmp->parray = SafeArrayCreateVector(VT_VARIANT, 0, 3);
+          SafeArrayAccessData(vntTmp->parray, (void**)&pvnt);
 
-        pvnt[0].vt = VT_R8;
-        pvnt[0].dblVal = w;
+          pvnt[0].vt = VT_R8;
+          pvnt[0].dblVal = w;
 
-        pvnt[1].vt = VT_UI1;
-        pvnt[1].bVal = sp;
+          pvnt[1].vt = VT_UI1;
+          pvnt[1].bVal = sp;
 
-        pvnt[2].vt = VT_BSTR;
-        pvnt[2].bstrVal = SysAllocString(L"Next");
-        SafeArrayUnaccessData(vntTmp->parray);
-        break;
+          pvnt[2].vt = VT_BSTR;
+          pvnt[2].bstrVal = SysAllocString(L"Next");
+          SafeArrayUnaccessData(vntTmp->parray);
+          break;
+      }
+      vntArgs.push_back(*vntTmp.get());
     }
-    vntArgs.push_back(*vntTmp.get());
+    hr = m_vecService[DensoBase::SRV_WATCH]->ExecFunction(ID_CONTROLLER_EXECUTE, vntArgs, vntRet);
+    pRob->ExecGiveArm();
   }
-  return m_vecService[DensoBase::SRV_WATCH]->ExecFunction(ID_CONTROLLER_EXECUTE, vntArgs, vntRet);
+  return hr;
 }
 
 HRESULT DensoControllerRC8Cobotta::HandMoveAH(double w, int sp, double eff)

@@ -35,8 +35,10 @@ rosidl_generate_interfaces(
   "msg/ExJoints.msg"
   "msg/Joints.msg"
   "msg/PoseData.msg"
+  "msg/UserIO.msg"
   "srv/ChangeMode.srv"
-  "msg/UserIO.msg")
+  "srv/GetMode.srv"
+  )
 
 
 if(BUILD_TESTING)

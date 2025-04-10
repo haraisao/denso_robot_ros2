@@ -52,6 +52,7 @@
 #include "denso_robot_core/denso_variable.h"
 #include "denso_robot_core_interfaces/msg/user_io.hpp"
 #include "denso_robot_core_interfaces/srv/change_mode.hpp"
+#include "denso_robot_core_interfaces/srv/get_mode.hpp"
 
 using namespace denso_robot_core;
 using namespace std_msgs;
@@ -145,6 +146,9 @@ private:
   bool ChangeModeFunction(
     const std::shared_ptr<denso_robot_core_interfaces::srv::ChangeMode::Request> request,
     std::shared_ptr<denso_robot_core_interfaces::srv::ChangeMode::Response> response);
+  bool GetModeFunction(
+    const std::shared_ptr<denso_robot_core_interfaces::srv::GetMode::Request> request,
+    std::shared_ptr<denso_robot_core_interfaces::srv::GetMode::Response> response);
 
   bool hasError();
   void printErrorDescription(HRESULT error_code, const std::string& error_message);
@@ -170,6 +174,7 @@ private:
   rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr pub_error_code_;
   // ChangeMode Service
   rclcpp::Service<denso_robot_core_interfaces::srv::ChangeMode>::SharedPtr change_mode_srv_;
+  rclcpp::Service<denso_robot_core_interfaces::srv::GetMode>::SharedPtr get_mode_srv_;
 
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr action_client_;
 

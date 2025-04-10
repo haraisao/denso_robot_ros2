@@ -266,8 +266,8 @@ def generate_launch_description():
     moveit_controllers_file = PathJoinSubstitution(
         [
             FindPackageShare(moveit_config_package), 'robots',
-            denso_robot_model, 'config/moveit_controllers_gazebo.yaml'
-            #denso_robot_model, 'config/moveit_controllers.yaml'
+            #denso_robot_model, 'config/moveit_controllers_gazebo.yaml'
+            denso_robot_model, 'config/moveit_controllers.yaml'
         ])
 
     trajectory_execution = {
@@ -313,7 +313,6 @@ def generate_launch_description():
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
-        condition=IfCondition(bcap_slave),
         parameters=[
             robot_description,
             robot_description_semantic,
@@ -328,24 +327,6 @@ def generate_launch_description():
             {'use_sim_time': sim}
         ])
 
-    move_group_bcap_node = Node(
-        package='moveit_ros_move_group',
-        executable='move_group',
-        output='screen',
-        condition=UnlessCondition(bcap_slave),
-        parameters=[
-            robot_description,
-            robot_description_semantic,
-            robot_description_kinematics,
-            robot_limits_file,
-            ompl_bcap_planning_pipeline_config,
-            trajectory_execution,
-            moveit_controllers,
-            moveit_controllers_file,
-            occupancy_map_monitor_parameters,
-            planning_scene_monitor_parameters,
-            {'use_sim_time': sim}
-        ])
 
 # --------- Robot Control Node (only if 'sim:=false') ---------
     #robot_controllers = PathJoinSubstitution(
@@ -389,13 +370,16 @@ def generate_launch_description():
     robot_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        condition=IfCondition(bcap_slave),
+        #condition=IfCondition(bcap_slave),
         arguments=[robot_controller, '-c', '/controller_manager'])
 
     bcap_robot_controller_node = Node(
         package='bcap_controller',
         executable='bcap_controller',
-        condition=UnlessCondition(bcap_slave),
+        #condition=UnlessCondition(bcap_slave),
+        parameters=[
+           {'ip_address': ip_address }
+        ],
         arguments=[])
 
     hand_controller_spawner = Node(
@@ -468,7 +452,6 @@ def generate_launch_description():
         bcap_robot_controller_node,
         hand_controller_spawner,
         move_group_node,
-        move_group_bcap_node,
 #        mongodb_server_node,
         rviz_node,
         static_tf,
