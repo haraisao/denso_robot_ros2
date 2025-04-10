@@ -22,7 +22,8 @@ class CobottControlServer(Node):
         self.get_logger().info("=== Init BCAP Cobotta Control Server")
         self.init_parameters()
         self.ip_addr = self.get_parameter("ip_address").value
-        self.ESP = self.get_parameter("restruct_esp1").value
+        self.ESP1 = self.get_parameter("restruct_esp1").value
+        self.ESP2 = self.get_parameter("restruct_esp2").value
 
         self.get_mode_client = self.create_client(GetMode, "/cobotta/GetMode")
         res_ =self.get_mode_client.wait_for_service(timeout_sec=5.0)
@@ -49,6 +50,7 @@ class CobottControlServer(Node):
     def init_parameters(self):
         self.declare_parameter("ip_address", "192.168.0.1")
         self.declare_parameter("restruct_esp1", 0.17)
+        self.declare_parameter("restruct_esp2", 5.0)
         return
 
     def connect(self):
@@ -124,15 +126,27 @@ class CobottControlServer(Node):
         for i in range(len(trj) - 2):
             dt_tmp = np.array(trj[i+2]) - np.array(trj[i+1])
             dt_tmp = dt_tmp/np.linalg.norm(dt_tmp)
-            if np.linalg.norm(dt - dt_tmp) > self.ESP :
+            if np.linalg.norm(dt - dt_tmp) > self.ESP1 :
                 self.get_logger().info("new waipoint: {}".format(np.linalg.norm(dt - dt_tmp)))
                 res.append(trj[i+1])
                 dt = dt_tmp
         res.append(trj[-1])
-        #return self.skip_close_points(res)
+        return self.skip_close_points(res)
+        #return res
+
+    def skip_close_points(self, trj):
+        res=[trj[0]]
+        p0=np.array(trj[0])
+        for i in range(1, len(trj)-1):
+            p1=np.array(trj[i])
+            if np.linalg.norm(p1 - p0) > self.ESP2:
+                res.append(trj[i])
+                p0=p1
+        res.append(trj[-1])
+
         return res
 
-    def skip_close_points(self, trj, ESP=0.01):
+    def skip_close_points_pos(self, trj, ESP=0.01):
         res=[trj[0]]
         p0=self.client.convert_j_to_p(trj[0])
         for i in range(1, len(trj)-1):
