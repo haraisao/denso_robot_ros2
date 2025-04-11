@@ -61,6 +61,13 @@ class CobottControlServer(Node):
         self.client.disconnect()
         return
 
+    def set_speed(self, v):
+        v = int(v * 100)
+        if v < 0: v=0
+        elif v > 100: v=100
+        self.client.set_speed(v)
+        return
+
     def get_control_mode(self):
         res_  = self.get_mode_client.wait_for_service(timeout_sec=1.0)
         if not res_ : return None
