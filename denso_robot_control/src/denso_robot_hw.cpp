@@ -96,6 +96,7 @@ DensoRobotHW::on_init(
       return CallbackReturn::ERROR;
     }
   }
+
   if (rttest_set_sched_priority(80, SCHED_FIFO)) {
     perror("Couldn't set scheduling priorirty and policy");
   }else{

@@ -26,15 +26,15 @@
 #include <string.h>
 
 #if defined(_USE_WIN_API)
-#include <winsock2.h>
-#pragma comment(lib, "wsock32.lib")
-typedef int socklen_t;
+  #include <winsock2.h>
+  #pragma comment(lib, "wsock32.lib")
+  typedef int socklen_t;
 #elif defined(_USE_LINUX_API)
-#include <arpa/inet.h>
-#include <errno.h>
-#include <sys/socket.h>
+  #include <arpa/inet.h>
+  #include <errno.h>
+  #include <sys/socket.h>
 #else
-#include "dn_additional.h"
+  #include "dn_additional.h"
 #endif
 
 #include "dn_common.h"

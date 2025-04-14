@@ -313,9 +313,9 @@ namespace denso_robot_control
       std::bind(&DensoRobotControl::ChangeModeFunction, this, std::placeholders::_1, std::placeholders::_2));
 
     get_mode_srv_ = node_->create_service<denso_robot_core_interfaces::srv::GetMode>(
-      "GetMode",
-      std::bind(&DensoRobotControl::GetModeFunction, this, std::placeholders::_1, std::placeholders::_2));
-
+        "GetMode",
+        std::bind(&DensoRobotControl::GetModeFunction, this, std::placeholders::_1, std::placeholders::_2));
+  
     pub_cur_mode_ = node_->create_publisher<std_msgs::msg::Int32>("CurMode", 1);
     pub_error_code_ = node_->create_publisher<std_msgs::msg::UInt32>("ErrorCode", 1);
 

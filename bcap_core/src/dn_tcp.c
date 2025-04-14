@@ -26,17 +26,17 @@
 #include <string.h>
 
 #if defined(_USE_WIN_API)
-#include <winsock2.h>
-#include <mstcpip.h>
-#pragma comment(lib, "wsock32.lib")
+  #include <winsock2.h>
+  #include <mstcpip.h>
+  #pragma comment(lib, "wsock32.lib")
 #elif defined(_USE_LINUX_API)
-#include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <netinet/tcp.h>
-#include <sys/socket.h>
+  #include <arpa/inet.h>
+  #include <errno.h>
+  #include <fcntl.h>
+  #include <netinet/tcp.h>
+  #include <sys/socket.h>
 #else
-#include "dn_additional.h"
+  #include "dn_additional.h"
 #endif
 
 #include "dn_common.h"
@@ -345,7 +345,7 @@ tcp_send(int sock, const char *buf, uint32_t len_buf, void *arg)
     if (ret == 0) { break; }
     len_sended += ret;
   }
-
+  
   if (len_send > len_sended) {
     return E_TIMEOUT;
   }

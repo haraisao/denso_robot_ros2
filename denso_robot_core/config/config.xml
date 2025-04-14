@@ -15,13 +15,14 @@
     <Variable vt="4" read="true" write="true"  duration="10000">@EXTSPEED</Variable>
   </Robot>
   <Task>
-    <!-- Task status -->
+    <!-- Task status 
     <Variable vt="3" read="true" write="false" duration="10000">@STATUS</Variable>
-    <!-- Start and stop -->
+    Start and stop 
     <Variable vt="3" read="false" write="true">@START</Variable>
     <Variable vt="3" read="false" write="true">@STOP</Variable>
+    -->
   </Task>
-  <!-- Global variables -->
+  <!-- Global variables
   <Variable vt="3"    read="true" write="true" id="true" duration="10000">I*</Variable>
   <Variable vt="4"    read="true" write="true" id="true" duration="10000">F*</Variable>
   <Variable vt="5"    read="true" write="true" id="true" duration="10000">D*</Variable>
@@ -31,6 +32,7 @@
   <Variable vt="8196" read="true" write="true" id="true" duration="10000">P*</Variable>
   <Variable vt="8196" read="true" write="true" id="true" duration="10000">J*</Variable>
   <Variable vt="8196" read="true" write="true" id="true" duration="10000">T*</Variable>
+   -->
   <!-- System variables -->
   <Variable vt="3"  read="true" write="false" duration="1000">@MODE</Variable>
   <Variable vt="11" read="true" write="true"  duration="1000">@LOCK</Variable>

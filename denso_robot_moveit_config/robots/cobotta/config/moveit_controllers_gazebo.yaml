@@ -24,5 +24,3 @@ move_group:
         default: true
         joints:
           - cobotta_finger_joint1
-
-        

@@ -327,7 +327,6 @@ def generate_launch_description():
             {'use_sim_time': sim}
         ])
 
-
 # --------- Robot Control Node (only if 'sim:=false') ---------
     #robot_controllers = PathJoinSubstitution(
     #    [
@@ -378,7 +377,7 @@ def generate_launch_description():
         executable='bcap_controller',
         #condition=UnlessCondition(bcap_slave),
         parameters=[
-           {'ip_address': ip_address }
+            {'ip_address': ip_address }
         ],
         arguments=[])
 

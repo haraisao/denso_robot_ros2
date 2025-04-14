@@ -11,7 +11,6 @@ controller_manager:
     denso_hand_controller:
       type: position_controllers/GripperActionController
 
-
 denso_joint_trajectory_controller:
   ros__parameters:
     joints:
@@ -37,12 +36,3 @@ denso_joint_trajectory_controller:
 denso_hand_controller:
   ros__parameters:
     joint: cobotta_finger_joint1
-    #publish_rate: 50.0
-    #command_interfaces: 
-    #  - position
-    #state_interfaces: 
-    #  - position
-    #  - velocity
-    #joints:
-    #  - cobotta_finger_joint1
-    #  - cobotta_finger_joint1_mimic
