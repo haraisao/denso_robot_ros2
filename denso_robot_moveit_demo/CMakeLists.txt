@@ -17,25 +17,49 @@ find_package(rosidl_default_runtime REQUIRED)
 
 # This is the general demo
 add_executable(${PROJECT_NAME} src/${PROJECT_NAME}.cpp)
-ament_target_dependencies(
-  ${PROJECT_NAME}
-  moveit_ros_planning_interface)
+
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>"
+  )
+
+target_link_libraries(
+  ${PROJECT_NAME} PUBLIC
+  rclcpp::rclcpp
+  moveit_ros_planning_interface::moveit_ros_planning_interface)
 
 # This is the pick-and-place demo with cartesian target poses (6 DOFs robot arms)
 add_executable(
   denso_robot_moveit_pickandplace
   src/denso_robot_moveit_pickandplace.cpp)
-ament_target_dependencies(
-  denso_robot_moveit_pickandplace
-  moveit_ros_planning_interface)
+
+target_include_directories(
+  denso_robot_moveit_pickandplace PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>"
+  )
+
+target_link_libraries(
+  denso_robot_moveit_pickandplace PUBLIC
+  rclcpp::rclcpp
+  moveit_ros_planning_interface::moveit_ros_planning_interface)
 
 # This is the pick-and-place demo with joint target positions (4 DOFs robot arms)
 add_executable(
   denso_robot_moveit_pickandplace_scara
   src/denso_robot_moveit_pickandplace_scara.cpp)
-ament_target_dependencies(
-  denso_robot_moveit_pickandplace_scara
-  moveit_ros_planning_interface)
+
+target_include_directories(
+  denso_robot_moveit_pickandplace_scara PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>"
+  )
+
+target_link_libraries(
+  denso_robot_moveit_pickandplace_scara PUBLIC
+  rclcpp::rclcpp
+  moveit_ros_planning_interface::moveit_ros_planning_interface)
 
 #=============
 # Install

@@ -30,13 +30,13 @@ namespace denso_robot_control {
 
 hardware_interface::CallbackReturn
 DensoRobotHW::on_init(
-  const hardware_interface::HardwareInfo & info)
+  const hardware_interface::HardwareComponentInterfaceParams & params)
 {
-  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS) {
+  if (hardware_interface::SystemInterface::on_init(params) != CallbackReturn::SUCCESS) {
     return CallbackReturn::ERROR;
   }
 
-  info_ = info;
+  info_ = params.hardware_info;
   pos_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   vel_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   eff_interface_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());

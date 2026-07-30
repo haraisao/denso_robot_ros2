@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20)
 project(denso_robot_control)
 
 # Default to C99
@@ -8,7 +8,7 @@ endif()
 
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD 20)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -49,7 +49,12 @@ add_library(
 add_executable(${PROJECT_NAME}_exec src/${PROJECT_NAME}.cpp)
 
 target_link_libraries(
-  ${PROJECT_NAME}_exec
+  ${PROJECT_NAME}_exec PUBLIC
+  rclcpp::rclcpp
+  rttest::rttest
+  hardware_interface::hardware_interface
+  bcap_service_interfaces::bcap_service_interfaces
+  denso_robot_core_interfaces::denso_robot_core_interfaces
   ${bcap_service_LIBRARIES}
   ${bcap_core_LIBRARIES}
   ${denso_robot_core_LIBRARIES})
@@ -59,17 +64,25 @@ target_include_directories(
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
-  ${hardware_interface_INCLUDE_DIRS}
+  #${hardware_interface_INCLUDE_DIRS}
+  ${rclcpp_components_INCLUDE_DIRS}
+  ${bcap_core_INCLUDE_DIRS}
   ${denso_robot_core_INCLUDE_DIRS}
   ${bcap_service_INCLUDE_DIRS})
 
-ament_target_dependencies(
-  ${PROJECT_NAME}_exec
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${THIS_PACKAGE_INCLUDE_DEPENDS})
+#target_link_libraries(
+#  ${PROJECT_NAME}_exec PUBLIC
+#  rclcpp::rclcpp
+#  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#  ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 target_link_libraries(
-  ${PROJECT_NAME}_plugin
+  ${PROJECT_NAME}_plugin PUBLIC
+  rclcpp::rclcpp
+  rttest::rttest
+  hardware_interface::hardware_interface
+  bcap_service_interfaces::bcap_service_interfaces
+  denso_robot_core_interfaces::denso_robot_core_interfaces
   ${bcap_service_LIBRARIES}
   ${bcap_core_LIBRARIES}
   ${denso_robot_core_LIBRARIES})
@@ -78,14 +91,16 @@ target_include_directories(${PROJECT_NAME}_plugin
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
-  ${hardware_interface_INCLUDE_DIRS}
+  #${hardware_interface_INCLUDE_DIRS}
+  ${rclcpp_components_INCLUDE_DIRS}
+  ${bcap_core_INCLUDE_DIRS}
   ${denso_robot_core_INCLUDE_DIRS}
   ${bcap_service_INCLUDE_DIRS})
 
-ament_target_dependencies(
-  ${PROJECT_NAME}_plugin
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${THIS_PACKAGE_INCLUDE_DEPENDS})
+#ament_target_dependencies(
+#  ${PROJECT_NAME}_plugin PUBLIC
+#  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#  ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 
 set(HAND_NAME  "cobotta_hand_control")
@@ -96,7 +111,11 @@ add_library(
   src/${HAND_NAME}.cpp)
 
 target_link_libraries(
-  ${HAND_NAME}_plugin
+  ${HAND_NAME}_plugin PUBLIC
+  rclcpp::rclcpp
+  hardware_interface::hardware_interface
+  bcap_service_interfaces::bcap_service_interfaces
+  denso_robot_core_interfaces::denso_robot_core_interfaces
   ${bcap_service_LIBRARIES}
   ${bcap_core_LIBRARIES}
   ${denso_robot_core_LIBRARIES})
@@ -105,14 +124,16 @@ target_include_directories(${HAND_NAME}_plugin
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
-  ${hardware_interface_INCLUDE_DIRS}
+  #${hardware_interface_INCLUDE_DIRS}
+  ${rclcpp_components_INCLUDE_DIRS}
   ${denso_robot_core_INCLUDE_DIRS}
+  ${bcap_core_INCLUDE_DIRS}
   ${bcap_service_INCLUDE_DIRS})
 
-ament_target_dependencies(
-  ${HAND_NAME}_plugin
-  ${${HAND_NAME}_EXPORTED_TARGETS}
-  ${THIS_PACKAGE_INCLUDE_DEPENDS})
+#ament_target_dependencies(
+#  ${HAND_NAME}_plugin
+#  ${${HAND_NAME}_EXPORTED_TARGETS}
+#  ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 
 pluginlib_export_plugin_description_file(hardware_interface denso_hardware_interface_plugin.xml)

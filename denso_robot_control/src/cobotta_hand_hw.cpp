@@ -28,14 +28,14 @@ namespace denso_robot_control {
   LifeCycle On Init
  */
 hardware_interface::CallbackReturn
-CobottaHandHW::on_init(const hardware_interface::HardwareInfo & info) {
+CobottaHandHW::on_init(const hardware_interface::HardwareComponentInterfaceParams & params) {
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** Start Hardware configuration 1");
-  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS) {
+  if (hardware_interface::SystemInterface::on_init(params) != CallbackReturn::SUCCESS) {
     return CallbackReturn::ERROR;
   }
 
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** Start Hardware configuration 2");
-  info_ = info;
+  info_ = params.hardware_info;
 
   hw_joint_state_ = 0.015;
   hw_joint_velocity_ = 0;

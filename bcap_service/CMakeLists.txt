@@ -29,7 +29,8 @@ add_library(
   ${PROJECT_NAME} SHARED
   src/${PROJECT_NAME}.cpp)
 
-ament_target_dependencies(${PROJECT_NAME} rclcpp std_msgs bcap_core bcap_service_interfaces)
+#ament_target_dependencies(${PROJECT_NAME} rclcpp std_msgs bcap_core bcap_service_interfaces)
+
 
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
@@ -37,12 +38,16 @@ target_include_directories(
   "$<INSTALL_INTERFACE:include>"
   ${bcap_core_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} ${bcap_core_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC
+	rclcpp::rclcpp
+	${std_msgs_TARGETS}
+  bcap_service_interfaces::bcap_service_interfaces
+  ${bcap_core_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_exec
   src/${PROJECT_NAME}.cpp)
 
-ament_target_dependencies(${PROJECT_NAME}_exec rclcpp std_msgs bcap_core bcap_service_interfaces)
+#ament_target_dependencies(${PROJECT_NAME}_exec rclcpp std_msgs bcap_core bcap_service_interfaces)
 
 target_include_directories(
   ${PROJECT_NAME}_exec PUBLIC
@@ -50,7 +55,11 @@ target_include_directories(
   "$<INSTALL_INTERFACE:include>"
   ${bcap_core_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME}_exec ${bcap_core_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_exec PUBLIC
+	rclcpp::rclcpp
+	${std_msgs_TARGETS}
+  bcap_service_interfaces::bcap_service_interfaces
+  ${bcap_core_LIBRARIES})
 
 
 #=============

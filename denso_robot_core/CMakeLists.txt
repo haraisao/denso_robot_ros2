@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20)
 project(denso_robot_core)
 
 # Default to C99
@@ -61,30 +61,37 @@ add_executable(
   src/denso_variable.cpp
   src/tinyxml2.cpp)
 
-ament_target_dependencies(
-  ${PROJECT_NAME}
-  rclcpp rclcpp_action
-  rclcpp_components
-  bcap_core
-  bcap_service
-  std_msgs
-  denso_robot_core_interfaces)
+target_link_libraries(
+  ${PROJECT_NAME} PUBLIC
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  #rclcpp_components::rclcpp_components
+  #bcap_core::bcap_core
+  #bcap_service::bcap_service
+  ${bcap_service_LIBRARIES}
+  ${bcap_core_LIBRARIES}
+  std_msgs::std_msgs
+  denso_robot_core_interfaces::denso_robot_core_interfaces)
 
-ament_target_dependencies(
-  ${PROJECT_NAME}_exec
-  rclcpp
-  rclcpp_action
-  rclcpp_components
-  bcap_core
-  bcap_service
-  std_msgs
-  denso_robot_core_interfaces)
+target_link_libraries(
+  ${PROJECT_NAME}_exec PUBLIC
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  #rclcpp_components::rclcpp_components
+  #bcap_core::bcap_core
+  #bcap_service::bcap_service
+  ${bcap_service_LIBRARIES}
+  ${bcap_core_LIBRARIES}
+  std_msgs::std_msgs
+  denso_robot_core_interfaces::denso_robot_core_interfaces)
 
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
+  ${rclcpp_components_INCLUDE_DIRS}
+  ${bcap_core_INCLUDE_DIRS}
   ${bcap_service_INCLUDE_DIRS}
   ${bcap_service_interfaces_INCLUDE_DIRS})
 
@@ -93,18 +100,20 @@ target_include_directories(
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
+  ${rclcpp_components_INCLUDE_DIRS}
+  ${bcap_core_INCLUDE_DIRS}
   ${bcap_service_INCLUDE_DIRS}
   ${bcap_service_interfaces_INCLUDE_DIRS})
 
-target_link_libraries(
-  ${PROJECT_NAME}
-  ${bcap_service_LIBRARIES}
-  ${bcap_core_LIBRARIES})
+#target_link_libraries(
+#  ${PROJECT_NAME}
+#  ${bcap_service_LIBRARIES}
+#  ${bcap_core_LIBRARIES})
 
-target_link_libraries(
-  ${PROJECT_NAME}_exec
-  ${bcap_service_LIBRARIES}
-  ${bcap_core_LIBRARIES})
+#target_link_libraries(
+#  ${PROJECT_NAME}_exec
+#  ${bcap_service_LIBRARIES}
+#  ${bcap_core_LIBRARIES})
 
 
 #=============
