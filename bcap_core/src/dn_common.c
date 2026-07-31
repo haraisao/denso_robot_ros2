@@ -211,7 +211,7 @@ exit_proc:
 HRESULT
 SafeArrayDestroy(SAFEARRAY *psa)
 {
-  int32_t i;
+  uint32_t i;
 
   if (psa != NULL) {
     if (psa->pvData != NULL) {
@@ -419,8 +419,8 @@ VariantCopy(VARIANT *pvargDest, const VARIANT *pvargSrc)
   VariantClear(pvargDest);
 
   if (pvargSrc->vt & VT_ARRAY) {
-    int32_t i, lLbound = 0;
-    uint32_t cbElements = 0, cElements;
+    int32_t lLbound = 0;
+    uint32_t i, cbElements = 0, cElements;
 
     lLbound = pvargSrc->parray->rgsabound[0].lLbound;
     cElements = pvargSrc->parray->rgsabound[0].cElements;

@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20)
 project(denso_robot_moveit_demo)
+
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
 
 # Common cmake code applied to all moveit packages
 find_package(moveit_common REQUIRED)

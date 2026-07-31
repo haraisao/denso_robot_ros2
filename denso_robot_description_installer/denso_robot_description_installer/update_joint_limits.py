@@ -103,9 +103,9 @@ def main(args=None):
     et_limits_xacro = etree.parse(path_limits_xacro)
     elem_joints = et_limits_xacro.getroot()[0].findall('joint')
 
-    r_joint = re.compile('(joint_\d+):')
-    r_has_vel_limit = re.compile('has_velocity_limits: (\w+)')
-    r_max_vel = re.compile('max_velocity: ([\d\.]+)')
+    r_joint = re.compile(r'(joint_\d+):')
+    r_has_vel_limit = re.compile(r'has_velocity_limits: (\w+)')
+    r_max_vel = re.compile(r'max_velocity: ([\d\.]+)')
 
     cur_elem = None
     cur_elem_kinematics = None
