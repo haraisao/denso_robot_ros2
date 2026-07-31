@@ -165,6 +165,8 @@ install(
   INCLUDES DESTINATION include
 )
 
+ament_export_targets(export_bcap_client)
+
 install(
   TARGETS bcap_server
   EXPORT export_bcap_server
@@ -173,6 +175,8 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
+
+ament_export_targets(export_bcap_server)
 
 install(
   TARGETS rac_string
@@ -183,6 +187,8 @@ install(
   INCLUDES DESTINATION include
 )
 
+ament_export_targets(export_rac_string)
+
 install(
   TARGETS tpcomm
   EXPORT export_tpcomm
@@ -191,6 +197,8 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
+
+ament_export_targets(export_tpcomm)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

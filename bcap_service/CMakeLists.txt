@@ -23,43 +23,43 @@ find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(bcap_service_interfaces REQUIRED)
 
-include_directories(include ${bcap_core_INCLUDE_DIRS})
+#include_directories(include ${bcap_core_INCLUDE_DIRS})
 
 add_library(
   ${PROJECT_NAME} SHARED
   src/${PROJECT_NAME}.cpp)
-
-#ament_target_dependencies(${PROJECT_NAME} rclcpp std_msgs bcap_core bcap_service_interfaces)
 
 
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
-  ${bcap_core_INCLUDE_DIRS})
+  )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
 	rclcpp::rclcpp
-	${std_msgs_TARGETS}
+	std_msgs::std_msgs
   bcap_service_interfaces::bcap_service_interfaces
-  ${bcap_core_LIBRARIES})
+  bcap_core::bcap_client
+  bcap_core::rac_string
+  )
 
 add_executable(${PROJECT_NAME}_exec
   src/${PROJECT_NAME}.cpp)
-
-#ament_target_dependencies(${PROJECT_NAME}_exec rclcpp std_msgs bcap_core bcap_service_interfaces)
 
 target_include_directories(
   ${PROJECT_NAME}_exec PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
-  ${bcap_core_INCLUDE_DIRS})
+  )
 
 target_link_libraries(${PROJECT_NAME}_exec PUBLIC
 	rclcpp::rclcpp
-	${std_msgs_TARGETS}
+  std_msgs::std_msgs
   bcap_service_interfaces::bcap_service_interfaces
-  ${bcap_core_LIBRARIES})
+  bcap_core::bcap_client
+  bcap_core::rac_string
+  )
 
 
 #=============
@@ -81,6 +81,8 @@ install(
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION INCLUDE)
+
+ament_export_targets(export_${PROJECT_NAME})
 
 install(
   TARGETS ${PROJECT_NAME}_exec
