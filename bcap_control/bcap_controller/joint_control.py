@@ -1,5 +1,6 @@
-#
-#
+'''
+  Denso Robot control with b-CAP
+'''
 import rclpy
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.node import Node
@@ -17,10 +18,12 @@ except:
 ACTION_NAME = '/denso_joint_trajectory_controller/follow_joint_trajectory'
 
 class CobottControlServer(Node):
+    ''' Cobotta control server '''
     def __init__(self):
         super().__init__('cobotta_ctrl_server')
         self.get_logger().info("=== Init BCAP Cobotta Control Server")
         self.init_parameters()
+
         self.ip_addr = self.get_parameter("ip_address").value
         self.ESP1 = self.get_parameter("restruct_esp1").value
         self.ESP2 = self.get_parameter("restruct_esp2").value
@@ -31,7 +34,7 @@ class CobottControlServer(Node):
             self.get_logger().info('service /cobotta/GetMode not available')
         
         #
-        #
+        # Action server
         self._action_server = ActionServer(self, FollowJointTrajectory, ACTION_NAME, 
                execute_callback = self.execute_callback,
                goal_callback = self.goal_callback,
@@ -48,20 +51,24 @@ class CobottControlServer(Node):
             self.get_logger().info("===>fail to connect to RC8 controller")
 
     def init_parameters(self):
+        ''' initialize ros parameters '''
         self.declare_parameter("ip_address", "192.168.0.1")
         self.declare_parameter("restruct_esp1", 0.17)
         self.declare_parameter("restruct_esp2", 5.0)
         return
 
     def connect(self):
+        ''' connect to RC8s '''
         self.client.connect()
         return
 
     def disconnect(self):
+        ''' disconnect from RC8s '''
         self.client.disconnect()
         return
 
     def set_speed(self, v):
+        ''' set robot's speeds '''
         v = int(v * 100)
         if v < 0: v=0
         elif v > 100: v=100
@@ -69,6 +76,7 @@ class CobottControlServer(Node):
         return
 
     def get_control_mode(self):
+        ''' get current control mode (ROS service) '''
         res_  = self.get_mode_client.wait_for_service(timeout_sec=1.0)
         if not res_ : return None
         req = GetMode.Request()
@@ -77,6 +85,7 @@ class CobottControlServer(Node):
         return self.future.result().mode
 
     def execute_callback(self, goal):
+        ''' execute callback of action '''
         if not self.get_control_mode() :
             self.get_logger().info('====> Execute goal')
             restruct_trj_ = self.get_joint_trajectory(goal.request.trajectory, deg=True, restruct=True)
@@ -100,14 +109,17 @@ class CobottControlServer(Node):
         return result
 
     def goal_callback(self, goal):
+        ''' callback to accept goal '''
         self.get_logger().info("Received goal request")
         return GoalResponse.ACCEPT
 
     def cancel_callback(self, goal):
+        ''' callback to accept cancel action service '''
         self.get_logger().info("Received cancel request")
         return CancelResponse.ACCEPT
 
     def get_joint_trajectory(self, trj, deg=False, restruct=False):
+        ''' get joint trajectory from ROS message '''
         trj_=[]
         try:
             for p in trj.points:
@@ -126,6 +138,7 @@ class CobottControlServer(Node):
             return None
 
     def restruct_waypoints(self, trj):
+        ''' restruct waypoints from joint trajectory '''
         dt = np.array(trj[1])  - np.array(trj[0])
         dt = dt/np.linalg.norm(dt)
         res = [trj[0]]
@@ -142,6 +155,7 @@ class CobottControlServer(Node):
         #return res
 
     def skip_close_points(self, trj):
+        ''' check the joint trajectory and skip closed point (joint space)'''
         res=[trj[0]]
         p0=np.array(trj[0])
         for i in range(1, len(trj)-1):
@@ -154,6 +168,7 @@ class CobottControlServer(Node):
         return res
 
     def skip_close_points_pos(self, trj, ESP=0.01):
+        ''' check the joint trajectory and skip closed point (work space) '''
         res=[trj[0]]
         p0=self.client.convert_j_to_p(trj[0])
         for i in range(1, len(trj)-1):
@@ -167,6 +182,7 @@ class CobottControlServer(Node):
         return res
 
 def main(args=None):
+    ''' Main funcrion '''
     rclpy.init(args=args)
 
     server_ = CobottControlServer()
