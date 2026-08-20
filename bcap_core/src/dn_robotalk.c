@@ -53,7 +53,8 @@ rtk_send_nak(const struct CONN_PARAM_COMMON *device, uint8_t from_id,
   union RTK_PACKET *packet = NULL;
   HRESULT hr;
 
-  packet = (union RTK_PACKET *) malloc(RTK_SIZE_HEADER + RTK_SIZE_CRC);
+  //packet = (union RTK_PACKET *) malloc(RTK_SIZE_HEADER + RTK_SIZE_CRC);
+  packet = (union RTK_PACKET *) malloc(sizeof(union RTK_PACKET));
   if (packet == NULL)
     return E_OUTOFMEMORY;
 

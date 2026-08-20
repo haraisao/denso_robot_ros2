@@ -114,7 +114,7 @@ CobottaHandHW::export_command_interfaces() {
   LifeCycle on Activate
  */
 hardware_interface::CallbackReturn
-CobottaHandHW::on_activate(const rclcpp_lifecycle::State & previous_state) {
+CobottaHandHW::on_activate(const rclcpp_lifecycle::State & /* previous_state */) {
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "====================> Starting COBOTTA hand drivers ...");
 
   std::string node_name = info_.hardware_parameters["node_name"].c_str();
@@ -175,7 +175,7 @@ CobottaHandHW::on_activate(const rclcpp_lifecycle::State & previous_state) {
   LifeCycle: on Deactivate
  */
 hardware_interface::CallbackReturn
-CobottaHandHW::on_deactivate(const rclcpp_lifecycle::State & previous_state) {
+CobottaHandHW::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/) {
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "Stopping robot drivers... ");
   // TODO: do we really need this wait time ??
   //drobo_->Stop();
@@ -208,7 +208,7 @@ CobottaHandHW::read(const rclcpp::Time & /* time */, const rclcpp::Duration & /*
    Write Target position 
  */
 hardware_interface::return_type
-CobottaHandHW::write(const rclcpp::Time & /* time */, const rclcpp::Duration & period) {
+CobottaHandHW::write(const rclcpp::Time & /* time */, const rclcpp::Duration & /* period*/) {
   std::unique_lock<std::mutex> lock_mode(mtx_mode_);
 
   if (current_state_ != hw_joint_command_){
@@ -230,6 +230,7 @@ CobottaHandHW::write(const rclcpp::Time & /* time */, const rclcpp::Duration & p
 void
 CobottaHandHW::SpinNode(rclcpp::Node::SharedPtr& node, CobottaHandControl_Ptr drobo) {
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** Starting DENSO robot control thread ...");
+#if 0
     std::thread denso_thread([node, drobo]() {
     rclcpp::WallRate loop_rate(125);
     while (rclcpp::ok()) {
@@ -241,7 +242,25 @@ CobottaHandHW::SpinNode(rclcpp::Node::SharedPtr& node, CobottaHandControl_Ptr dr
   });
 
   denso_thread.detach();
+#else
+  auto timer = node->create_wall_timer(
+    std::chrono::milliseconds(8), // 約125Hz
+    [drobo]() {
+      // drobo->Update(); // 125Hzで実行したい処理
+    }
+  );
 
+  // バックグラウンドスレッドでExecutorを走らせる
+  std::thread denso_thread([node, timer]() {
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node);
+    
+    // rclcpp::ok() の間、ブロックして効率的にコールバックを処理し続ける
+    executor.spin(); 
+    
+    rclcpp::shutdown();
+  });
+#endif
   RCLCPP_INFO(rclcpp::get_logger("CobottaHandHW"), "***** DENSO robot control thread started !!");
 }
 }  // namespace denso_robot_control

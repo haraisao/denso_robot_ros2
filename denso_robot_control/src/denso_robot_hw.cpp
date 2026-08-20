@@ -144,7 +144,7 @@ std::vector<hardware_interface::CommandInterface> DensoRobotHW::export_command_i
 }
 
 hardware_interface::CallbackReturn
-DensoRobotHW::on_activate(const rclcpp_lifecycle::State & previous_state)
+DensoRobotHW::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "Starting DENSO robot drivers ...");
   // TODO: do we really need this wait time ??
@@ -239,7 +239,7 @@ DensoRobotHW::on_activate(const rclcpp_lifecycle::State & previous_state)
 }
 
 hardware_interface::CallbackReturn
-DensoRobotHW::on_deactivate(const rclcpp_lifecycle::State & previous_state)
+DensoRobotHW::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "Stopping robot drivers... ");
   // TODO: do we really need this wait time ??
@@ -282,6 +282,7 @@ hardware_interface::return_type DensoRobotHW::write(const rclcpp::Time & /* time
 void DensoRobotHW::SpinNode(rclcpp::Node::SharedPtr& node, DensoRobotControl_Ptr drobo)
 {
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "***** Starting DENSO robot control thread ...");
+#if 0
     std::thread denso_thread([node, drobo]() {
     rclcpp::WallRate loop_rate(1000);
     while (rclcpp::ok()) {
@@ -293,6 +294,25 @@ void DensoRobotHW::SpinNode(rclcpp::Node::SharedPtr& node, DensoRobotControl_Ptr
   });
 
   denso_thread.detach();
+#else
+  auto timer = node->create_wall_timer(
+    std::chrono::milliseconds(1), // 1000Hz
+    [drobo]() {
+      drobo->Update();
+    }
+  );
+
+  // バックグラウンドスレッドでExecutorを走らせる
+  std::thread denso_thread([node, timer]() {
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node);
+    
+    // rclcpp::ok() の間、ブロックして効率的にコールバックを処理し続ける
+    executor.spin(); 
+    
+    rclcpp::shutdown();
+  });
+#endif
   RCLCPP_INFO(rclcpp::get_logger("DensoRobotHW"), "***** DENSO robot control thread started !!");
 }
 }  // namespace denso_robot_control

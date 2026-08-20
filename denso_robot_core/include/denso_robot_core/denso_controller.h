@@ -108,6 +108,7 @@ public:
   static constexpr int BCAP_CONTROLLER_CONNECT_ARGS = 4;
   static constexpr int BCAP_CONTROLLER_EXECUTE_ARGS = 3;
   static constexpr const char * XML_CTRL_NAME = "Controller";
+  using DensoBase::InitializeBCAP;
 
   virtual ~DensoController();
   virtual HRESULT InitializeBCAP(const std::string& filename);

@@ -33,7 +33,8 @@ class DensoTask : public DensoBase
 {
 public:
   static constexpr const char * XML_TASK_NAME = "Task";
-
+  using DensoBase::InitializeBCAP;
+  
   DensoTask(
     DensoBase * parent, Service_Vec& service, Handle_Vec& handle,
     const std::string& name, const int * mode);

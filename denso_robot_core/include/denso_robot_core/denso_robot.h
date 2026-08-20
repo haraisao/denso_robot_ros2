@@ -117,6 +117,7 @@ public:
   };
 
 public:
+  using DensoBase::InitializeBCAP;
   virtual ~DensoRobot();
   virtual HRESULT InitializeBCAP(XMLElement * xmlElem);
   HRESULT StartService(rclcpp::Node::SharedPtr& node);
