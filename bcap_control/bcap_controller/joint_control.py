@@ -9,6 +9,8 @@ from moveit_msgs.action import ExecuteTrajectory
 from control_msgs.action import FollowJointTrajectory
 from denso_robot_core_interfaces.srv import GetMode
 
+from std_srvs.srv import SetBool
+
 try:
   from rc8_client import Rc8Client
 except:
@@ -47,6 +49,10 @@ class CobottControlServer(Node):
         else:
             self.get_logger().info("===>fail to connect to RC8 controller")
 
+        self.reset_service = self.create_service(SetBool, '/cobotta/reset', self.reset_callback)
+        self.motor_service = self.create_service(SetBool, '/cobotta/motot', self.motor_callback)
+        self.speed_sub = self.create_subscription(Float64, '/cobotta/set_speed', self.set_speec_callback, 1)
+
     def init_parameters(self):
         self.declare_parameter("ip_address", "192.168.0.1")
         self.declare_parameter("restruct_esp1", 0.17)
@@ -67,6 +73,30 @@ class CobottControlServer(Node):
         elif v > 100: v=100
         self.client.set_speed(v)
         return
+
+    def set_speed_callback(self,msg):
+        sp = msg.data
+        self.set_speed(sp)
+    
+    def reset_callback(self, request, response):
+        if request.data:
+            self.client.motion_preparation()
+            response.msssega = "motion_preparation"
+        else:
+            self.client.reset()
+            response.message = "reset"
+        response.success = True
+        return response
+
+    def motor_callback(self, request, response):
+        if request.data:
+            self.client.motor(True)
+            response.msssega = "motor on"
+        else:
+            self.client.motor(False)
+            response.message = "motor off"
+        response.success = True
+        return response
 
     def get_control_mode(self):
         res_  = self.get_mode_client.wait_for_service(timeout_sec=1.0)

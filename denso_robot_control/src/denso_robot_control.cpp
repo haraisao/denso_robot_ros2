@@ -486,7 +486,7 @@ namespace denso_robot_control
   void DensoRobotControl::Callback_HandMoveA(const std_msgs::msg::UInt32::SharedPtr msg)
   {
     if (std::shared_ptr<DensoControllerRC8Cobotta> cobotta_ = std::dynamic_pointer_cast<DensoControllerRC8Cobotta>(ctrl_)) {
-      cobotta_->HandMove((double)msg->data, hand_speed_);
+      cobotta_->HandMoveAH((double)msg->data, hand_speed_, hand_force_);
     }
     else {
       RCLCPP_ERROR(
