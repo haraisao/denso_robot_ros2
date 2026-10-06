@@ -152,7 +152,7 @@ namespace denso_robot_control
 
     node_->declare_parameter("hand_speed", 100);
     hand_speed_ = node_->get_parameter("hand_speed").as_int();
-    node_->declare_parameter("hand_force", 20.0);
+    node_->declare_parameter("hand_force", 0.0);
     hand_force_ = node_->get_parameter("hand_force").as_double();
 
     node_->declare_parameter("bcap_slave_mode", true);
@@ -486,7 +486,19 @@ namespace denso_robot_control
   void DensoRobotControl::Callback_HandMoveA(const std_msgs::msg::UInt32::SharedPtr msg)
   {
     if (std::shared_ptr<DensoControllerRC8Cobotta> cobotta_ = std::dynamic_pointer_cast<DensoControllerRC8Cobotta>(ctrl_)) {
-      cobotta_->HandMoveAH((double)msg->data, hand_speed_, hand_force_);
+      hand_speed_ = node_->get_parameter("hand_speed").as_int();
+      hand_force_ = node_->get_parameter("hand_force").as_double();
+      RCLCPP_INFO(
+      rclcpp::get_logger(node_->get_name()),
+      "***** Call HandMove: %d, %lf", hand_speed_, hand_force_);
+      
+      if (hand_force_ > 0){
+        printf("======= HandMoveAH\n");
+        cobotta_->HandMoveAH((double)msg->data, hand_speed_, hand_force_);
+      }else{
+        printf("~~~HandMoveA\n");
+        cobotta_->HandMove((double)msg->data, hand_speed_);
+      }
     }
     else {
       RCLCPP_ERROR(

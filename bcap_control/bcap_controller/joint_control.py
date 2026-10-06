@@ -10,6 +10,7 @@ from control_msgs.action import FollowJointTrajectory
 from denso_robot_core_interfaces.srv import GetMode
 
 from std_srvs.srv import SetBool
+from std_msgs.msg import Float64
 
 try:
   from rc8_client import Rc8Client
@@ -31,7 +32,11 @@ class CobottControlServer(Node):
         res_ =self.get_mode_client.wait_for_service(timeout_sec=5.0)
         if not res_ :
             self.get_logger().info('service /cobotta/GetMode not available')
-        
+
+        self.reset_service = self.create_service(SetBool, '/cobotta/reset', self.reset_callback)
+        self.motor_service = self.create_service(SetBool, '/cobotta/motor', self.motor_callback)
+        self.speed_sub = self.create_subscription(Float64, '/cobotta/set_speed', self.set_speed_callback, 1)
+
         #
         #
         self._action_server = ActionServer(self, FollowJointTrajectory, ACTION_NAME, 
@@ -49,10 +54,7 @@ class CobottControlServer(Node):
         else:
             self.get_logger().info("===>fail to connect to RC8 controller")
 
-        self.reset_service = self.create_service(SetBool, '/cobotta/reset', self.reset_callback)
-        self.motor_service = self.create_service(SetBool, '/cobotta/motot', self.motor_callback)
-        self.speed_sub = self.create_subscription(Float64, '/cobotta/set_speed', self.set_speec_callback, 1)
-
+        
     def init_parameters(self):
         self.declare_parameter("ip_address", "192.168.0.1")
         self.declare_parameter("restruct_esp1", 0.17)
@@ -81,7 +83,7 @@ class CobottControlServer(Node):
     def reset_callback(self, request, response):
         if request.data:
             self.client.motion_preparation()
-            response.msssega = "motion_preparation"
+            response.message = "motion_preparation"
         else:
             self.client.reset()
             response.message = "reset"
@@ -91,7 +93,7 @@ class CobottControlServer(Node):
     def motor_callback(self, request, response):
         if request.data:
             self.client.motor(True)
-            response.msssega = "motor on"
+            response.message = "motor on"
         else:
             self.client.motor(False)
             response.message = "motor off"
